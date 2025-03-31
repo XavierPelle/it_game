@@ -1,0 +1,18 @@
+services: 
+  php:
+    build: 
+      context: .
+    container_name: php
+    ports:
+      - "8101:8101"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - mysql
+
+  mysql:
+    image: mysql:8.0-oracle
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: testdb
