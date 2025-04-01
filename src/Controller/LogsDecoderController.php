@@ -137,12 +137,13 @@ class LogsDecoderController
         }
         if (strpos($line, "http://") !== false) {
             preg_match('/http:\/\/[^\s\[\]]+/', $line, $matches);
-
+        
             if (!empty($matches)) {
-                $url = $matches[0];
+                $url = rtrim($matches[0], '*');
                 $data['url'][$url] = ($data['url'][$url] ?? 0) + 1;
             }
         }
+        
     }
 
     public function generateHtmlTable($data)
