@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard avec Chart.js</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        canvas {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Dashboard des Données Réseaux</h1>
+
+    <canvas id="ethernetFramesChart"></canvas>
+    <canvas id="addressesChart"></canvas>
+    <canvas id="tcpPortsChart"></canvas>
+    <canvas id="kerberosRealmsChart"></canvas>
+
+    <script>
+        fetch('http://localhost:8101/dashboard')
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                createCharts(data);
+            })
+            .catch(error => {
+                console.error('Erreur lors de la récupération des données:', error);
+            });
+
+        function createCharts(data) {
+            const ethernetFramesCtx = document.getElementById('ethernetFramesChart').getContext('2d');
+            new Chart(ethernetFramesCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Ethernet Frames', 'IPv4 Frames', 'UDP Frames', 'TCP Frames', 'Kerberos Frames'],
+                    datasets: [{
+                        label: 'Nombre de Trames',
+                        data: [data.ethernet_frames, data.ipv4_frames, data.udp_frames, data.tcp_frames, data.kerberos_frames],
+                        backgroundColor: ['#4CAF50', '#2196F3', '#FFC107', '#FF5722', '#9C27B0']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Trames Réseaux' }
+                    }
+                }
+            });
+
+            const addressesCtx = document.getElementById('addressesChart').getContext('2d');
+            new Chart(addressesCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(data.dst_addresses),
+                    datasets: [{
+                        label: 'Adresses Destination',
+                        data: Object.values(data.dst_addresses),
+                        backgroundColor: Object.keys(data.dst_addresses).map((_, i) => `hsl(${i * 30}, 70%, 50%)`)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: { display: true, text: 'Répartition des Adresses Destination' }
+                    }
+                }
+            });
+
+            const tcpPortsCtx = document.getElementById('tcpPortsChart').getContext('2d');
+            new Chart(tcpPortsCtx, {
+                type: 'horizontalBar',
+                data: {
+                    labels: Object.keys(data.tcp_ports),
+                    datasets: [{
+                        label: 'Nombre de Connexions',
+                        data: Object.values(data.tcp_ports),
+                        backgroundColor: '#FF9800'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    indexAxis: 'y',
+                    plugins: {
+                        title: { display: true, text: 'Utilisation des Ports TCP' }
+                    },
+                    scales: {
+                        xAxes: [{ ticks: { beginAtZero: true } }]
+                    }
+                }
+            });
+
+            const kerberosRealmsCtx = document.getElementById('kerberosRealmsChart').getContext('2d');
+            new Chart(kerberosRealmsCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(data.kerberos_realms),
+                    datasets: [{
+                        label: 'Kerberos Realms',
+                        data: Object.values(data.kerberos_realms),
+                        backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { title: { display: true, text: 'Répartition des Kerberos Realms' } }
+                }
+            });
+        }</script>
+</body>
+
+</html>

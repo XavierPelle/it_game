@@ -69,31 +69,34 @@ class LogsDecoderController
             'tcp_ports' => [],
             'kerberos_services' => [],
             'kerberos_realms' => [],
+            'ssdp_frames'  => 0,
+            'url' => [],
         ];
     }
 
     private function processLine($line, &$data)
     {
+
         if (strpos($line, "Ethernet II") !== false) {
             $data['ethernet_frames']++;
-            if (preg_match('/Src: ([^\s]+)/', $line, $matches)) {
-                $source = trim($matches[1]);
+            if (preg_match('/Src: ([^\s,]+)/', $line, $matches)) {
+                $source = rtrim(trim($matches[1]), ',');
                 $data['ethernet_sources'][$source] = ($data['ethernet_sources'][$source] ?? 0) + 1;
             }
-            if (preg_match('/Dst: ([^\s]+)/', $line, $matches)) {
-                $destination = trim($matches[1]);
+            if (preg_match('/Dst: ([^\s,]+)/', $line, $matches)) {
+                $destination = rtrim(trim($matches[1]), ',');
                 $data['ethernet_dests'][$destination] = ($data['ethernet_dests'][$destination] ?? 0) + 1;
             }
         }
 
         if (strpos($line, "Internet Protocol Version 4") !== false) {
             $data['ipv4_frames']++;
-            if (preg_match('/Src: ([^\s]+)/', $line, $matches)) {
-                $source = trim($matches[1]);
+            if (preg_match('/Src: ([^\s,]+)/', $line, $matches)) {
+                $source = rtrim(trim($matches[1]), ',');
                 $data['src_addresses'][$source] = ($data['src_addresses'][$source] ?? 0) + 1;
             }
-            if (preg_match('/Dst: ([^\s]+)/', $line, $matches)) {
-                $destination = trim($matches[1]);
+            if (preg_match('/Dst: ([^\s,]+)/', $line, $matches)) {
+                $destination = rtrim(trim($matches[1]), ',');
                 $data['dst_addresses'][$destination] = ($data['dst_addresses'][$destination] ?? 0) + 1;
             }
         }
@@ -119,10 +122,25 @@ class LogsDecoderController
             $data['kerberos_realms'][$realm] = ($data['kerberos_realms'][$realm] ?? 0) + 1;
         }
 
+        if (strpos($line, "MS KRB5")) {
+            $data['kerberos_frames']++;
+        }
+
         if (strpos($line, "nbns") !== false) {
             $data['nbns_queries']++;
-            if (strpos($line, "Broadcast") !== false) {
-                $data['broadcast_addresses']++;
+        }
+        if (strpos($line, 'ssdp') !== false) {
+            $data['ssdp_frames']++;
+        }
+        if (strpos($line, "Dst: Broadcast") !== false) {
+            $data['broadcast_addresses']++;
+        }
+        if (strpos($line, "http://") !== false) {
+            preg_match('/http:\/\/[^\s\[\]]+/', $line, $matches);
+
+            if (!empty($matches)) {
+                $url = $matches[0];
+                $data['url'][$url] = ($data['url'][$url] ?? 0) + 1;
             }
         }
     }
@@ -142,10 +160,10 @@ class LogsDecoderController
                     a { color: #1a73e8; text-decoration: none; }
                     a:hover { text-decoration: underline; }
                 </style></head><body>";
-    
+
         echo "<div class='container'>";
         echo "<h1>Résumé de l'analyse des logs</h1>";
-    
+
         echo "<table><tr><th>Type</th><th>Nombre</th></tr>";
         echo "<tr><td>Trames Ethernet</td><td>{$data['ethernet_frames']}</td></tr>";
         echo "<tr><td>Trames IPv4</td><td>{$data['ipv4_frames']}</td></tr>";
@@ -153,23 +171,24 @@ class LogsDecoderController
         echo "<tr><td>Trames TCP</td><td>{$data['tcp_frames']}</td></tr>";
         echo "<tr><td>Trames Kerberos</td><td>{$data['kerberos_frames']}</td></tr>";
         echo "<tr><td>Requêtes NBNS</td><td>{$data['nbns_queries']}</td></tr>";
+        echo "<tr><td>Requêtes SSDP</td><td>{$data['ssdp_frames']}</td></tr>";
         echo "<tr><td>Adresses Broadcast</td><td>{$data['broadcast_addresses']}</td></tr>";
         echo "</table>";
-    
+
         $this->generateAddressTable("Adresses source", $data['src_addresses']);
         $this->generateAddressTable("Adresses destination", $data['dst_addresses']);
-        $this->generateAddressTable("Adresses Ethernet source", $data['ethernet_sources']);
-        $this->generateAddressTable("Adresses Ethernet destination", $data['ethernet_dests']);
-    
+        $this->generateTable("Adresses Ethernet source", $data['ethernet_sources']);
+        $this->generateTable("Adresses Ethernet destination", $data['ethernet_dests']);
+
         $this->generateTable("Ports TCP", $data['tcp_ports']);
         $this->generateTable("Services Kerberos", $data['kerberos_services']);
         $this->generateTable("Régions Kerberos", $data['kerberos_realms']);
-    
+        $this->generateUrlTable("URL", $data['url']);
         echo "</div>";
-    
+
         echo "</body></html>";
     }
-    
+
     private function generateAddressTable($title, $data)
     {
         echo "<h2>$title</h2>";
@@ -179,7 +198,16 @@ class LogsDecoderController
         }
         echo "</table>";
     }
-    
+
+    private function generateUrlTable($title, $data)
+    {
+        echo "<h2>$title</h2>";
+        echo "<table><tr><th>Url</th><th>Occurrences</th></tr>";
+        foreach ($data as $url => $count) {
+            echo "<tr><td><a href='/analyzeURL?urls=$url' target='_blank'>$url</a></td><td>$count</td></tr>";
+        }
+        echo "</table>";
+    }
 
     private function generateTable($title, $data)
     {
@@ -199,29 +227,29 @@ class LogsDecoderController
             echo "Aucune adresse IP fournie.";
             return;
         }
-    
-        $apiKey = '';
+
+        $apiKey = '168a3d3874c712ae9d6fc313ae20f0fbc44cbf6bc9f98a818302a05e5056163c';
         $url = 'https://www.virustotal.com/api/v3/ip_addresses/' . urlencode($ip);
-    
+
         $ch = curl_init();
-    
+
         curl_setopt($ch, CURLOPT_URL, $url);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'x-apikey: ' . $apiKey
         ]);
-    
+
         $response = curl_exec($ch);
-    
-        if(curl_errno($ch)) {
+
+        if (curl_errno($ch)) {
             echo 'Erreur cURL : ' . curl_error($ch);
         }
-    
+
         curl_close($ch);
-    
+
         if ($response) {
             $data = json_decode($response, true);
-    
+
             if (isset($data['data'])) {
                 echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Analyse de l'IP</title><style>
                         body { font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; }
@@ -233,16 +261,16 @@ class LogsDecoderController
                         tr:hover { background-color: #f1f1f1; }
                         .container { max-width: 800px; margin: 0 auto; background-color: white; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 8px; }
                     </style></head><body>";
-    
+
                 echo "<div class='container'>";
                 echo "<h1>Analyse de l'IP : {$ip}</h1>";
-    
+
                 echo "<h2>Détails de l'IP</h2>";
                 echo "<table><tr><th>ID de l'IP</th><td>" . $data['data']['id'] . "</td></tr>";
                 echo "<tr><th>Type</th><td>" . $data['data']['type'] . "</td></tr>";
                 echo "<tr><th>Tags</th><td>" . implode(", ", $data['data']['attributes']['tags']) . "</td></tr>";
                 echo "<tr><th>Whois</th><td><pre>" . $data['data']['attributes']['whois'] . "</pre></td></tr></table>";
-    
+
                 echo "<h2>Statistiques d'analyse</h2>";
                 $stats = $data['data']['attributes']['last_analysis_stats'];
                 echo "<table><tr><th>Malicious</th><td>" . $stats['malicious'] . "</td></tr>";
@@ -250,7 +278,7 @@ class LogsDecoderController
                 echo "<tr><th>Undetected</th><td>" . $stats['undetected'] . "</td></tr>";
                 echo "<tr><th>Harmless</th><td>" . $stats['harmless'] . "</td></tr>";
                 echo "<tr><th>Timeout</th><td>" . $stats['timeout'] . "</td></tr></table>";
-    
+
                 echo "<h2>Résultats de l'analyse par moteur</h2>";
                 echo "<table><tr><th>Moteur</th><th>Résultat</th><th>Catégorie</th><th>État</th></tr>";
                 foreach ($data['data']['attributes']['last_analysis_results'] as $engine => $result) {
@@ -258,7 +286,7 @@ class LogsDecoderController
                 }
                 echo "</table>";
                 echo "</div>";
-    
+
                 echo "</body></html>";
             } else {
                 echo "Aucune information disponible pour cette adresse IP.";
@@ -267,7 +295,92 @@ class LogsDecoderController
             echo "Erreur lors de l'analyse de l'IP avec l'API VirusTotal.";
         }
     }
-    
-}
 
-?>
+    public function analyzeUrlWithVirusTotal()
+    {
+        if (isset($_GET['urls'])) {
+            $url = $_GET['urls'];
+        } else {
+            echo "Aucune adresse URL fournie.";
+            return;
+        }
+
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            echo "L'URL fournie est invalide.";
+            return;
+        }
+
+        $encodedUrl = rtrim(strtr(base64_encode($url), '+/', '-_'), '=');
+
+        $apiKey = '168a3d3874c712ae9d6fc313ae20f0fbc44cbf6bc9f98a818302a05e5056163c';
+        $apiUrl = "https://www.virustotal.com/api/v3/urls/{$encodedUrl}/comments";
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'x-apikey: ' . $apiKey,
+            'accept: application/json',
+        ]);
+
+        $response = curl_exec($ch);
+
+        if (curl_errno($ch)) {
+            echo 'Erreur cURL : ' . curl_error($ch);
+            return;
+        }
+        curl_close($ch);
+
+        $data = json_decode($response, true);
+
+        if (isset($data['error'])) {
+            echo "Erreur API : " . $data['error']['message'];
+            return;
+        }
+
+        print_r($data);
+    }
+
+    public function showDashboard()
+    {
+        $decodedFile = './src/Logs/decoded_logs.txt';
+    
+        if (!file_exists($decodedFile)) {
+            echo "Le fichier décodé n'existe pas. Veuillez d'abord exécuter la méthode decodeFile.\n";
+            return;
+        }
+    
+        $data = $this->initializeData();
+    
+        $file = fopen($decodedFile, 'r');
+        if (!$file) {
+            echo "Erreur lors de l'ouverture du fichier.\n";
+            return;
+        }
+    
+        while (($line = fgets($file)) !== false) {
+            $this->processLine($line, $data);
+        }
+    
+        fclose($file);
+    
+        echo json_encode([
+            'ethernet_frames' => $data['ethernet_frames'],
+            'ipv4_frames' => $data['ipv4_frames'],
+            'udp_frames' => $data['udp_frames'],
+            'tcp_frames' => $data['tcp_frames'],
+            'kerberos_frames' => $data['kerberos_frames'],
+            'nbns_queries' => $data['nbns_queries'],
+            'ssdp_frames' => $data['ssdp_frames'],
+            'broadcast_addresses' => $data['broadcast_addresses'],
+            'src_addresses' => $data['src_addresses'],
+            'dst_addresses' => $data['dst_addresses'],
+            'ethernet_sources' => $data['ethernet_sources'],
+            'ethernet_dests' => $data['ethernet_dests'],
+            'tcp_ports' => $data['tcp_ports'],
+            'kerberos_services' => $data['kerberos_services'],
+            'kerberos_realms' => $data['kerberos_realms'],
+            'url' => $data['url'],
+        ]);
+    }
+}
