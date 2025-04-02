@@ -12,7 +12,7 @@ $router->addRoute('GET', '/fetch-logs', [$fetchLogService, 'fetchLogFile']);
 $router->addRoute('GET', '/decode-logs', [$logsDecoderController, 'decodeFile']);
 $router->addRoute('GET', '/analyze', [$logsDecoderController, 'analyzeLogs']);
 $router->addRoute('GET', '/read', [$logsDecoderController, 'readDecodedFile']);
-$router->addRoute('GET', '/analyzeIP', [$logsDecoderController, 'analyzeIpWithVirusTotal']);
+$router->addRoute('GET', '/analyzeIP', [$logsDecoderController, 'analyzeIp']);
 $router->addRoute('GET', '/analyzeURL', [$logsDecoderController, 'analyzeUrlWithVirusTotal']);
 $router->addRoute('GET', '/dashboard', [$logsDecoderController, 'showDashboard']);
 $router->addRoute('GET', '/test', [$logsDecoderController, 'test']);
