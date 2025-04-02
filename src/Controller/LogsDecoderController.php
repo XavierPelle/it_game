@@ -14,44 +14,6 @@ class LogsDecoderController
         echo "Le fichier a été décodé et enregistré dans : $decodedFile\n";
     }
 
-    public function readDecodedFile()
-    {
-        $file = './src/Logs/decoded_logs.txt';
-
-        if (file_exists($file) && is_readable($file)) {
-            $content = file_get_contents($file);
-            echo "<pre>$content</pre>";
-        } else {
-            echo "Le fichier n'existe pas ou n'est pas lisible.";
-        }
-    }
-
-    public function analyzeLogs()
-    {
-        $decodedFile = './src/Logs/decoded_logs.txt';
-
-        if (!file_exists($decodedFile)) {
-            echo "Le fichier décodé n'existe pas. Veuillez d'abord exécuter la méthode decodeFile.\n";
-            return;
-        }
-
-        $data = $this->initializeData();
-
-        $file = fopen($decodedFile, 'r');
-        if (!$file) {
-            echo "Erreur lors de l'ouverture du fichier.\n";
-            return;
-        }
-
-        while (($line = fgets($file)) !== false) {
-            $this->processLine($line, $data);
-        }
-
-        fclose($file);
-
-        $this->generateHtmlTable($data);
-    }
-
     private function initializeData()
     {
         return [
@@ -62,11 +24,13 @@ class LogsDecoderController
             'kerberos_frames' => 0,
             'nbns_queries' => 0,
             'broadcast_addresses' => 0,
+            'logs_length' => 0,
             'src_addresses' => [],
             'dst_addresses' => [],
             'ethernet_sources' => [],
             'ethernet_dests' => [],
             'tcp_ports' => [],
+            'dst_ports' => [],
             'kerberos_services' => [],
             'kerberos_realms' => [],
             'ssdp_frames'  => 0,
@@ -109,7 +73,15 @@ class LogsDecoderController
             $data['tcp_frames']++;
             if (preg_match('/Src Port: (\d+)/', $line, $matches)) {
                 $port = trim($matches[1]);
-                $data['tcp_ports'][$port] = ($data['tcp_ports'][$port] ?? 0) + 1;
+                if ($port < 1024) {
+                    $data['tcp_ports'][$port] = ($data['tcp_ports'][$port] ?? 0) + 1;
+                }
+            }
+            if (preg_match('/Dst Port: (\d+)/', $line, $matches)) {
+                $port = trim($matches[1]);
+                if ($port < 1024) {
+                    $data['dst_ports'][$port] = ($data['dst_ports'][$port] ?? 0) + 1;
+                }
             }
         }
 
@@ -140,83 +112,13 @@ class LogsDecoderController
 
             if (!empty($matches)) {
                 $url = $matches[0];
-                $data['url'][$url] = ($data['url'][$url] ?? 0) + 1;
+                if (strpos(strtolower($url), 'microsoft') === false && strpos(strtolower($url), 'windowsupdate') === false) {
+                    $data['url'][$url] = ($data['url'][$url] ?? 0) + 1;
+                }
             }
         }
-    }
 
-    public function generateHtmlTable($data)
-    {
-        echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Analyse des Logs</title><style>
-                    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; }
-                    h1 { color: #333; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th, td { padding: 12px; text-align: left; border: 1px solid #ddd; }
-                    th { background-color: #f2f2f2; }
-                    tr:nth-child(even) { background-color: #f9f9f9; }
-                    tr:hover { background-color: #f1f1f1; }
-                    .container { max-width: 800px; margin: 0 auto; background-color: white; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 8px; }
-                    .whois { max-height: 300px; overflow-y: scroll; white-space: pre-wrap; word-wrap: break-word; background-color: #f4f4f4; padding: 10px; }
-                    a { color: #1a73e8; text-decoration: none; }
-                    a:hover { text-decoration: underline; }
-                </style></head><body>";
-
-        echo "<div class='container'>";
-        echo "<h1>Résumé de l'analyse des logs</h1>";
-
-        echo "<table><tr><th>Type</th><th>Nombre</th></tr>";
-        echo "<tr><td>Trames Ethernet</td><td>{$data['ethernet_frames']}</td></tr>";
-        echo "<tr><td>Trames IPv4</td><td>{$data['ipv4_frames']}</td></tr>";
-        echo "<tr><td>Trames UDP</td><td>{$data['udp_frames']}</td></tr>";
-        echo "<tr><td>Trames TCP</td><td>{$data['tcp_frames']}</td></tr>";
-        echo "<tr><td>Trames Kerberos</td><td>{$data['kerberos_frames']}</td></tr>";
-        echo "<tr><td>Requêtes NBNS</td><td>{$data['nbns_queries']}</td></tr>";
-        echo "<tr><td>Requêtes SSDP</td><td>{$data['ssdp_frames']}</td></tr>";
-        echo "<tr><td>Adresses Broadcast</td><td>{$data['broadcast_addresses']}</td></tr>";
-        echo "</table>";
-
-        $this->generateAddressTable("Adresses source", $data['src_addresses']);
-        $this->generateAddressTable("Adresses destination", $data['dst_addresses']);
-        $this->generateTable("Adresses Ethernet source", $data['ethernet_sources']);
-        $this->generateTable("Adresses Ethernet destination", $data['ethernet_dests']);
-
-        $this->generateTable("Ports TCP", $data['tcp_ports']);
-        $this->generateTable("Services Kerberos", $data['kerberos_services']);
-        $this->generateTable("Régions Kerberos", $data['kerberos_realms']);
-        $this->generateUrlTable("URL", $data['url']);
-        echo "</div>";
-
-        echo "</body></html>";
-    }
-
-    private function generateAddressTable($title, $data)
-    {
-        echo "<h2>$title</h2>";
-        echo "<table><tr><th>Adresse</th><th>Occurrences</th></tr>";
-        foreach ($data as $address => $count) {
-            echo "<tr><td><a href='/analyzeIP?ip=$address' target='_blank'>$address</a></td><td>$count</td></tr>";
-        }
-        echo "</table>";
-    }
-
-    private function generateUrlTable($title, $data)
-    {
-        echo "<h2>$title</h2>";
-        echo "<table><tr><th>Url</th><th>Occurrences</th></tr>";
-        foreach ($data as $url => $count) {
-            echo "<tr><td><a href='/analyzeURL?urls=$url' target='_blank'>$url</a></td><td>$count</td></tr>";
-        }
-        echo "</table>";
-    }
-
-    private function generateTable($title, $data)
-    {
-        echo "<h2>$title</h2>";
-        echo "<table><tr><th>Élément</th><th>Occurrences</th></tr>";
-        foreach ($data as $key => $count) {
-            echo "<tr><td>$key</td><td>$count</td></tr>";
-        }
-        echo "</table>";
+        $data['logs_length']++;
     }
 
     public function analyzeIpWithVirusTotal()
@@ -252,32 +154,58 @@ class LogsDecoderController
 
             if (isset($data['data'])) {
                 echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Analyse de l'IP</title><style>
-                        body { font-family: Arial, sans-serif; padding: 20px; background-color: #f9f9f9; }
-                        h1 { color: #333; }
-                        table { width: 100%; border-collapse: collapse; margin-top: 20px; text-wrap: wrap;}
-                        th, td { padding: 12px; text-align: left; border: 1px solid #ddd; text-wrap: wrap; }
-                        th { background-color: #f2f2f2; text-wrap: wrap;}
-                        tr:nth-child(even) { background-color: #f9f9f9; }
-                        tr:hover { background-color: #f1f1f1; }
-                        .container { max-width: 800px; margin: 0 auto; background-color: white; padding: 20px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); border-radius: 8px; }
+                        body { font-family: 'Roboto', sans-serif; background-color: #e5e5e5; margin: 0; padding: 0; }
+                        h1, h2 { color: #333; }
+                        .container { max-width: 80%; margin: 20px auto; background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+                        .header { display: flex; align-items: center; justify-content: center; padding: 20px 0; }
+                        .header h1 { margin: 0; font-size: 24px; color: #0073e6; }
+                        .header img { max-height: 40px; margin-right: 15px; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+                        th, td { padding: 10px 15px; text-align: left; border: 1px solid #ddd; word-wrap: break-word; }
+                        th { background-color: #f5f5f5; color: #333; font-weight: bold; }
+                        tr:nth-child(even) { background-color: #fafafa; }
+                        tr:hover { background-color: #f0f0f0; }
+                        .badge { padding: 5px 10px; border-radius: 15px; color: white; font-weight: bold; }
+                        .malicious { background-color: #f44336; }
+                        .suspicious { background-color: #ff9800; }
+                        .undetected { background-color: #4caf50; }
+                        .harmless { background-color: #2196f3; }
+                        .timeout { background-color: #9e9e9e; }
+                        .tags { display: flex; flex-wrap: wrap; gap: 10px; }
+                        .tag { padding: 6px 12px; background-color: #0073e6; color: white; border-radius: 20px; font-size: 14px; }
+                        pre { background-color: #f1f1f1; padding: 10px; border-radius: 5px; overflow-x: auto; }
+                        footer { text-align: center; padding: 20px 0; font-size: 14px; color: #777; }
+    
+                        /* Nouveau style pour les colonnes */
+                        th, td:first-child {
+                            width: 30%; /* Colonne de gauche (ID, Type, etc.) */
+                        }
+    
+                        td {
+                            width: 70%; /* Colonne de droite (valeurs) */
+                        }
                     </style></head><body>";
 
                 echo "<div class='container'>";
-                echo "<h1>Analyse de l'IP : {$ip}</h1>";
+                echo "<div class='header'><img src='https://www.virustotal.com/favicon.ico' alt='VirusTotal Logo'><h1>Analyse de l'IP : {$ip}</h1></div>";
 
                 echo "<h2>Détails de l'IP</h2>";
                 echo "<table><tr><th>ID de l'IP</th><td>" . $data['data']['id'] . "</td></tr>";
                 echo "<tr><th>Type</th><td>" . $data['data']['type'] . "</td></tr>";
-                echo "<tr><th>Tags</th><td>" . implode(", ", $data['data']['attributes']['tags']) . "</td></tr>";
+                echo "<tr><th>Tags</th><td><div class='tags'>";
+                foreach ($data['data']['attributes']['tags'] as $tag) {
+                    echo "<span class='tag'>{$tag}</span>";
+                }
+                echo "</div></td></tr>";
                 echo "<tr><th>Whois</th><td><pre>" . $data['data']['attributes']['whois'] . "</pre></td></tr></table>";
 
                 echo "<h2>Statistiques d'analyse</h2>";
                 $stats = $data['data']['attributes']['last_analysis_stats'];
-                echo "<table><tr><th>Malicious</th><td>" . $stats['malicious'] . "</td></tr>";
-                echo "<tr><th>Suspicious</th><td>" . $stats['suspicious'] . "</td></tr>";
-                echo "<tr><th>Undetected</th><td>" . $stats['undetected'] . "</td></tr>";
-                echo "<tr><th>Harmless</th><td>" . $stats['harmless'] . "</td></tr>";
-                echo "<tr><th>Timeout</th><td>" . $stats['timeout'] . "</td></tr></table>";
+                echo "<table><tr><th>Malicious</th><td class='malicious'>" . $stats['malicious'] . "</td></tr>";
+                echo "<tr><th>Suspicious</th><td class='suspicious'>" . $stats['suspicious'] . "</td></tr>";
+                echo "<tr><th>Undetected</th><td class='undetected'>" . $stats['undetected'] . "</td></tr>";
+                echo "<tr><th>Harmless</th><td class='harmless'>" . $stats['harmless'] . "</td></tr>";
+                echo "<tr><th>Timeout</th><td class='timeout'>" . $stats['timeout'] . "</td></tr></table>";
 
                 echo "<h2>Résultats de l'analyse par moteur</h2>";
                 echo "<table><tr><th>Moteur</th><th>Résultat</th><th>Catégorie</th><th>État</th></tr>";
@@ -287,6 +215,7 @@ class LogsDecoderController
                 echo "</table>";
                 echo "</div>";
 
+                echo "<footer>&copy; 2025 Analyse IP VirusTotal</footer>";
                 echo "</body></html>";
             } else {
                 echo "Aucune information disponible pour cette adresse IP.";
@@ -295,6 +224,8 @@ class LogsDecoderController
             echo "Erreur lors de l'analyse de l'IP avec l'API VirusTotal.";
         }
     }
+
+
 
     public function analyzeUrlWithVirusTotal()
     {
@@ -338,33 +269,93 @@ class LogsDecoderController
             return;
         }
 
-        print_r($data);
+        if (isset($data['data']) && !empty($data['data'])) {
+            echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>Analyse de l'URL</title><style>
+                    body { font-family: 'Roboto', sans-serif; background-color: #e5e5e5; margin: 0; padding: 0; }
+                    h1, h2 { color: #333; }
+                    .container { max-width: 80%; margin: 20px auto; background-color: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); }
+                    .header { display: flex; align-items: center; justify-content: center; padding: 20px 0; }
+                    .header h1 { margin: 0; font-size: 24px; color: #0073e6; }
+                    .header img { max-height: 40px; margin-right: 15px; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
+                    th, td { padding: 10px 15px; text-align: left; border: 1px solid #ddd; word-wrap: break-word; }
+                    th { background-color: #f5f5f5; color: #333; font-weight: bold; }
+                    tr:nth-child(even) { background-color: #fafafa; }
+                    tr:hover { background-color: #f0f0f0; }
+                    .badge { padding: 5px 10px; border-radius: 15px; color: white; font-weight: bold; }
+                    .malicious { background-color: #f44336; }
+                    .suspicious { background-color: #ff9800; }
+                    .undetected { background-color: #4caf50; }
+                    .harmless { background-color: #2196f3; }
+                    .timeout { background-color: #9e9e9e; }
+                    .tags { display: flex; flex-wrap: wrap; gap: 10px; }
+                    .tag { padding: 6px 12px; background-color: #0073e6; color: white; border-radius: 20px; font-size: 14px; }
+                    pre { background-color: #f1f1f1; padding: 10px; border-radius: 5px; overflow-x: auto; }
+                    footer { text-align: center; padding: 20px 0; font-size: 14px; color: #777; }
+                    th, td:first-child { width: 30%; }
+                    td { width: 70%; }
+                    .clean { background-color: #4caf50; } /* Green for CLEAN */
+                    .malicious { background-color: #f44336; } /* Red for malicious */
+                </style></head><body>";
+
+            echo "<div class='container'>";
+            echo "<div class='header'><img src='https://www.virustotal.com/favicon.ico' alt='VirusTotal Logo'><h1>Analyse de l'URL : {$url}</h1></div>";
+
+            echo "<h2>Détails de l'URL</h2>";
+            echo "<table><tr><th>ID de l'URL</th><td>" . $data['data'][0]['id'] . "</td></tr>";
+            echo "<tr><th>Type</th><td>" . $data['data'][0]['type'] . "</td></tr>";
+            echo "<tr><th>Date de l'analyse</th><td>" . date("d-m-Y H:i:s", $data['data'][0]['attributes']['date']) . "</td></tr>";
+            echo "<tr><th>Votes positifs</th><td>" . $data['data'][0]['attributes']['votes']['positive'] . "</td></tr>";
+            echo "<tr><th>Votes négatifs</th><td>" . $data['data'][0]['attributes']['votes']['negative'] . "</td></tr></table>";
+
+
+            echo "<h2>Commentaires</h2>";
+            echo "<table>";
+
+            foreach ($data['data'] as $comment) {
+                $commentVerdict = isset($comment['attributes']['last_analysis_stats']['malicious']) && $comment['attributes']['last_analysis_stats']['malicious'] > 0 ? 'malicious' : 'clean';
+
+                $commentClass = ($commentVerdict === 'clean') ? 'clean' : 'malicious';
+
+                echo "<tr><th>Texte du commentaire</th><td class='{$commentClass}'><pre>" . $comment['attributes']['text'] . "</pre></td></tr>";
+                echo "<tr><th>Date du commentaire</th><td>" . date("d-m-Y H:i:s", $comment['attributes']['date']) . "</td></tr>";
+                echo "<tr><th>Votes positifs</th><td>" . $comment['attributes']['votes']['positive'] . "</td></tr>";
+                echo "<tr><th>Votes négatifs</th><td>" . $comment['attributes']['votes']['negative'] . "</td></tr>";
+            }
+
+            echo "</table>";
+            echo "</div>";
+            echo "<footer>&copy; 2025 Analyse URL VirusTotal</footer>";
+            echo "</body></html>";
+        } else {
+            echo "Aucune information disponible pour cette URL.";
+        }
     }
 
     public function showDashboard()
     {
         $decodedFile = './src/Logs/decoded_logs.txt';
-    
+
         if (!file_exists($decodedFile)) {
             echo "Le fichier décodé n'existe pas. Veuillez d'abord exécuter la méthode decodeFile.\n";
             return;
         }
-    
+
         $data = $this->initializeData();
-    
+
         $file = fopen($decodedFile, 'r');
         if (!$file) {
             echo "Erreur lors de l'ouverture du fichier.\n";
             return;
         }
-    
+
         while (($line = fgets($file)) !== false) {
             $this->processLine($line, $data);
         }
-    
+
         fclose($file);
-    
-        echo json_encode([
+
+        $jsonData = json_encode([
             'ethernet_frames' => $data['ethernet_frames'],
             'ipv4_frames' => $data['ipv4_frames'],
             'udp_frames' => $data['udp_frames'],
@@ -381,6 +372,45 @@ class LogsDecoderController
             'kerberos_services' => $data['kerberos_services'],
             'kerberos_realms' => $data['kerberos_realms'],
             'url' => $data['url'],
+            'logs_length' => $data['logs_length'],
+            'dst_ports' => $data['dst_ports'],
         ]);
+        echo $jsonData;
+    }
+
+    private function getIpCoordinates($ipAddresses)
+    {
+        $coordinates = [];
+        $apiUrl = 'http://ip-api.com/json/';
+
+        foreach ($ipAddresses as $ip) {
+            $response = file_get_contents($apiUrl . $ip);
+            $data = json_decode($response, true);
+
+            if ($data && $data['status'] === 'success') {
+                $coordinates[] = [
+                    'ip' => $ip,
+                    'latitude' => $data['lat'],
+                    'longitude' => $data['lon']
+                ];
+            } else {
+                $coordinates[] = [
+                    'ip' => $ip,
+                    'latitude' => null,
+                    'longitude' => null
+                ];
+            }
+        }
+        return $coordinates;
+    }
+
+    public function test()
+    {
+        $pcapFile = 'src/Logs/logs';
+
+        $output = shell_exec("tshark -r $pcapFile -Y 'dns.qry.name' -T fields -e eth.src -e dns.qry.name -e kerberos.CNameString -e dhcp.option.hostname");
+
+
+        var_dump($output);
     }
 }
