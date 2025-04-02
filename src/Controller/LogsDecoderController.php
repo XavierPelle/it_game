@@ -47,8 +47,21 @@ class LogsDecoderController
             $this->processLine($line, $data);
         }
 
-        fclose($file);
+        if (isset($_GET['abuseCheck'])) {
+            $ip = $_GET['abuseCheck'];
+            $apiKey = '16ac9dfa2f6bec5ee41423b2ab52797178d1e576d7ab91be587f47adf4f9a45fbe761d9e470ceced';
+            $comments = $this->getAbuseIpComments($ip, $apiKey);
 
+            echo "<h2>Commentaires pour $ip</h2>";
+            foreach ($comments as $c) {
+                echo "📅 " . $c['date'] . "<br>";
+                echo "💬 " . htmlspecialchars($this->simplifyComment($c['comment'])) . "<br>";
+                echo "🌍 " . $c['reporterCountryCode'] . "<hr>";
+            }
+        }
+
+
+        fclose($file);
         $this->generateHtmlTable($data);
     }
 
@@ -71,6 +84,9 @@ class LogsDecoderController
             'kerberos_realms' => [],
             'ssdp_frames'  => 0,
             'url' => [],
+            'countries' => [],
+            'cities' => [],
+            'alerts' => [],
         ];
     }
 
@@ -143,7 +159,15 @@ class LogsDecoderController
                 $data['url'][$url] = ($data['url'][$url] ?? 0) + 1;
             }
         }
+        if (preg_match('/CountryName:\s*([A-Z]{2})/', $line, $match)) {
+            $countryCode = $match[1];
+            $data['countries'][$countryCode] = ($data['countries'][$countryCode] ?? 0) + 1;
+        }
         
+        if (preg_match('/localityName\s*=\s*([^\s,]+)/', $line, $match)) {
+            $city = rtrim($match[1],')');
+            $data['cities'][$city] = ($data['cities'][$city] ?? 0) + 1;
+        }
     }
 
     public function generateHtmlTable($data)
@@ -163,6 +187,18 @@ class LogsDecoderController
                 </style></head><body>";
 
         echo "<div class='container'>";
+        echo "<script>
+        function toggleDetail(id) {
+        const row = document.getElementById(id);
+        if (row.style.display === 'none' || row.style.display === '') {
+            row.style.display = 'table-row';
+        } else {
+            row.style.display = 'none';
+        }
+        }
+        </script>";
+        
+
         echo "<h1>Résumé de l'analyse des logs</h1>";
 
         echo "<table><tr><th>Type</th><th>Nombre</th></tr>";
@@ -185,20 +221,88 @@ class LogsDecoderController
         $this->generateTable("Services Kerberos", $data['kerberos_services']);
         $this->generateTable("Régions Kerberos", $data['kerberos_realms']);
         $this->generateUrlTable("URL", $data['url']);
-        echo "</div>";
+        if (!empty($data['countries'])) {
+            echo "<h2>Pays présents dans les certificats / logs</h2>";
+            echo "<table><tr><th>Pays</th><th>Occurrences</th></tr>";
+            foreach ($data['countries'] as $code => $count) {
+                echo "<tr><td>$code</td><td>$count</td></tr>";
+            }
+            echo "</table>";
+        }
+        
+        if (!empty($data['cities'])) {
+            echo "<h2>Villes détectées</h2>";
+            echo "<table><tr><th>Ville</th><th>Occurrences</th></tr>";
+            foreach ($data['cities'] as $city => $count) {
+                echo "<tr><td>$city</td><td>$count</td></tr>";
+            }
+            echo "</table>";
+        }
 
+        $apiKey = '16ac9dfa2f6bec5ee41423b2ab52797178d1e576d7ab91be587f47adf4f9a45fbe761d9e470ceced';
+        $ip = '52.113.196.254';
+
+        $comments =$this->getAbuseIpComments($ip, $apiKey);
+
+        if (!empty($comments)) {
+            echo "<h2>Commentaires AbuseIPDB filtrés</h2>";
+            echo "<table><tr><th>Date</th><th>Pays</th><th>Résumé</th></tr>";
+        
+            foreach ($comments as $c) {
+                $date = htmlspecialchars($c['date']);
+                $country = htmlspecialchars($c['reporterCountryCode']);
+                $summary = $this->simplifyComment($c['comment']);
+        
+                echo "<tr><td>$date</td><td>$country</td><td>$summary</td></tr>";
+            }
+        
+            echo "</table>";
+        } else {
+            echo "<p>Aucun commentaire trouvé pour l'IP $ip.</p>";
+        }
+        
+        echo "<script>
+        function toggleDetail(id) {
+            const el = document.getElementById(id);
+            el.style.display = (el.style.display === 'none' || el.style.display === '') ? 'block' : 'none';
+        }
+        </script>";
+
+
+        echo "</div>";
         echo "</body></html>";
     }
 
     private function generateAddressTable($title, $data)
     {
         echo "<h2>$title</h2>";
-        echo "<table><tr><th>Adresse</th><th>Occurrences</th></tr>";
+        echo "<table><tr><th>Adresse</th><th>Occurrences</th><th>Actions</th></tr>";
+    
         foreach ($data as $address => $count) {
-            echo "<tr><td><a href='/analyzeIP?ip=$address' target='_blank'>$address</a></td><td>$count</td></tr>";
+            $id = 'actions_' . md5($address);
+    
+            echo "<tr>";
+            echo "<td>
+                    <span style='cursor:pointer;' onclick=\"toggleDetail('$id')\">🔽</span>
+                    <span style='margin-left: 8px;'><a href='/analyzeIP?ip=$address' target='_blank'>$address</a></span>
+                  </td>";
+            echo "<td>$count</td>";
+            echo "<td>
+                    <div id='$id' style='display: none; margin-top: 8px;'>
+                        <a href='/analyzeIP?ip=$address' target='_blank'>
+                            <button style='margin-right:10px;'>VirusTotal</button>
+                        </a>
+                        <a href='?abuseCheck=$address'>
+                            <button>AbuseIPDB</button>
+                        </a>
+                    </div>
+                  </td>";
+            echo "</tr>";
         }
+    
         echo "</table>";
     }
+    
 
     private function generateUrlTable($title, $data)
     {
@@ -218,6 +322,41 @@ class LogsDecoderController
             echo "<tr><td>$key</td><td>$count</td></tr>";
         }
         echo "</table>";
+    }
+
+    function getAbuseIpComments($ip, $apiKey) {
+        $url = "https://api.abuseipdb.com/api/v2/check?ipAddress=$ip&maxAgeInDays=90&verbose=true";
+    
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => [
+                "Key: $apiKey",
+                "Accept: application/json"
+            ],
+        ]);
+    
+        $response = curl_exec($curl);
+        curl_close($curl);
+    
+        $data = json_decode($response, true);
+    
+        $comments = [];
+    
+        if (isset($data['data']['reports'])) {
+            foreach ($data['data']['reports'] as $report) {
+                $comments[] = [
+                    'date' => $report['reportedAt'],
+                    'comment' => $report['comment'],
+                    'categories' => $report['categories'], // tu peux aussi utiliser ça
+                    'reporterCountryCode' => $report['reporterCountryCode']
+                ];
+            }
+        }
+    
+        return $comments;
     }
 
     public function analyzeIpWithVirusTotal()
@@ -341,6 +480,81 @@ class LogsDecoderController
 
         print_r($data);
     }
+    public function testAbuse()
+{
+    $ip = '239.255.255.250'; // IP connue comme malveillante
+
+    $result = $this->queryAbuseIpDb($ip);
+
+    echo "<pre>";
+    echo "Résultat de la requête pour $ip :\n";
+    var_dump($result);
+    echo "</pre>";
+}
+
+    private function queryAbuseIpDb($ip)
+{
+    $apiKey = '16ac9dfa2f6bec5ee41423b2ab52797178d1e576d7ab91be587f47adf4f9a45fbe761d9e470ceced';
+    $url = "https://api.abuseipdb.com/api/v2/check?ipAddress={$ip}&maxAgeInDays=90";
+
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Key: $apiKey",
+        "Accept: application/json"
+    ]);
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    if (!$response) return null;
+
+    $data = json_decode($response, true);
+    return $data['data'] ?? null;
+}
+
+
+private function simplifyComment($comment)
+{
+    $patterns = [
+        '/brute force/i' => 'Brute force',
+        '/spam/i' => 'Spam',
+        '/sql injection/i' => 'SQL Injection',
+        '/scanner|scan/i' => 'Scan détecté',
+        '/crawler impostor/i' => 'Faux bot Google',
+        '/fail2ban/i' => 'Bloqué par Fail2Ban',
+        '/xmlrpc/i' => 'Attaque XML-RPC',
+        '/mod_security/i' => 'Déclenché par ModSecurity',
+        '/cloudflare/i' => 'Déclenché par WAF Cloudflare',
+        '/wordpress/i' => 'Scan WordPress',
+        '/ddos/i' => 'Tentative de DDoS',
+        '/registration hack/i' => 'Tentative d’inscription pirate',
+        '/honeypot/i' => 'Détection Honeypot',
+        '/web form/i' => 'Spam via formulaire',
+        '/rdp/i' => 'Tentative brute RDP',
+        '/phishing/i' => 'Phishing détecté',
+        '/port scanning/i' => 'Scan de ports suspect',
+        '/api|trigger|custom/i' => 'Règle personnalisée/trigger',
+    ];
+
+    $summary = [];
+
+    foreach ($patterns as $regex => $label) {
+        if (preg_match($regex, $comment)) {
+            $summary[] = $label;
+        }
+    }
+
+    if (empty($summary)) {
+        // Si aucun match, on affiche un bout du commentaire
+        return substr(strip_tags($comment), 0, 80) . '...';
+    }
+
+    return implode(', ', array_unique($summary));
+}
+
+
+
 
     public function showDashboard()
     {
@@ -382,6 +596,11 @@ class LogsDecoderController
             'kerberos_services' => $data['kerberos_services'],
             'kerberos_realms' => $data['kerberos_realms'],
             'url' => $data['url'],
+            'countries' => $data['countries'],
+            'cities' => $data['cities'],
         ]);
     }
+
+    
+
 }
