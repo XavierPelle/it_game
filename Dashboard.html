@@ -68,89 +68,73 @@
                             <div class="w-100">
                                 <div class="row">
                                     <div class="col-sm-6">
-                                        <div class="card">
+                                        <div class="card dashboard-card">
                                             <div class="card-body">
+
                                                 <div class="row">
                                                     <div class="col mt-0">
-                                                        <h5 class="card-title">Nombre de lignes analysé
+                                                        <h5 class="card-title">Nombre de lignes analysées
                                                     </div>
 
-                                                    <div class="col-auto">
-                                                        <div class="stat text-primary">
-                                                            <i class="align-middle" data-feather="truck"></i>
-                                                        </div>
-                                                    </div>
+
                                                 </div>
                                                 <h1 id="logs_length" class="mt-1 mb-3"></h1>
                                                 <div class="mb-0">
                                                     <span class="text-danger"> <i
-                                                            class="mdi mdi-arrow-bottom-right"></i> -3.65% </span>
-                                                    <span class="text-muted">Depuis les derniers logs</span>
+                                                            class="mdi mdi-arrow-bottom-right"></i> </span>
+                                                    <span class="text-muted"></span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="card">
+                                        <div class="card dashboard-card">
                                             <div class="card-body">
-                                                <div class="row">
-                                                    <div class="col mt-0">
-                                                        <h5 class="card-title">Visitors</h5>
-                                                    </div>
-
-                                                    <div class="col-auto">
-                                                        <div class="stat text-primary">
-                                                            <i class="align-middle" data-feather="users"></i>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <h1 class="mt-1 mb-3">14.212</h1>
-                                                <div class="mb-0">
-                                                    <span class="text-success"> <i
-                                                            class="mdi mdi-arrow-bottom-right"></i> 5.25% </span>
-                                                    <span class="text-muted">Since last week</span>
-                                                </div>
+                                                <h5 class="card-title">Importer PCAP</h5>
+                                                <input type="file" id="pcapFileInput" name="file" />
+                                                <button class="btn btn-dark mt-2"
+                                                    onclick="uploadPCAP()">Importer</button>
                                             </div>
                                         </div>
+
                                     </div>
                                     <div class="col-sm-6">
-                                        <div class="card">
+                                        <div class="card dashboard-card">
                                             <div class="card-body">
+
                                                 <div class="row">
                                                     <div class="col mt-0">
-                                                        <h5 class="card-title">Earnings</h5>
+                                                        <h5 class="card-title">Télécharger le fichier depuis l'API</h5>
+                                                        <button class="btn btn-primary"
+                                                            onclick="downloadPCAP()">Télécharger</button>
                                                     </div>
 
-                                                    <div class="col-auto">
-                                                        <div class="stat text-primary">
-                                                            <i class="align-middle" data-feather="dollar-sign"></i>
-                                                        </div>
-                                                    </div>
+
                                                 </div>
-                                                <h1 class="mt-1 mb-3">$21.300</h1>
+                                                <h1 class="mt-1 mb-3"></h1>
                                                 <div class="mb-0">
                                                     <span class="text-success"> <i
-                                                            class="mdi mdi-arrow-bottom-right"></i> 6.65% </span>
-                                                    <span class="text-muted">Since last week</span>
+                                                            class="mdi mdi-arrow-bottom-right"></i> </span>
+                                                    <span class="text-muted"></span>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="card">
+                                        <div class="card dashboard-card">
                                             <div class="card-body">
+
                                                 <div class="row">
                                                     <div class="col mt-0">
-                                                        <h5 class="card-title">Orders</h5>
+                                                        <h5 class="card-title">Decoder et Analyser</h5>
+                                                        <button class="btn btn-success"
+                                                            onclick="analyzePCAP()">Analyser</button>
                                                     </div>
 
-                                                    <div class="col-auto">
-                                                        <div class="stat text-primary">
-                                                            <i class="align-middle" data-feather="shopping-cart"></i>
-                                                        </div>
-                                                    </div>
+
                                                 </div>
-                                                <h1 class="mt-1 mb-3">64</h1>
+
+                                                <h1 class="mt-1 mb-3"></h1>
                                                 <div class="mb-0">
                                                     <span class="text-danger"> <i
-                                                            class="mdi mdi-arrow-bottom-right"></i> -2.25% </span>
-                                                    <span class="text-muted">Since last week</span>
+                                                            class="mdi mdi-arrow-bottom-right"></i> </span>
+                                                    <span class="text-muted"></span>
                                                 </div>
                                             </div>
                                         </div>
@@ -158,6 +142,8 @@
                                 </div>
                             </div>
                         </div>
+
+
 
                         <div class="col-xl-6 col-xxl-7 scrolls">
                             <div class="card flex-fill w-100">
@@ -707,48 +693,48 @@
         </tr>
     `;
 
-    const labels = Object.keys(data.kerberos_services);
-                const occ = Object.values(data.kerberos_services);
+            const labels = Object.keys(data.kerberos_services);
+            const occ = Object.values(data.kerberos_services);
 
-                new Chart(document.getElementById("chartjs-dashboard-bar"), {
-                    type: "bar",
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: "Logs en cours",
-                            backgroundColor: window.theme.primary,
-                            borderColor: window.theme.primary,
-                            hoverBackgroundColor: window.theme.primary,
-                            hoverBorderColor: window.theme.primary,
-                            data: occ,
-                            barPercentage: 0.75,
-                            categoryPercentage: 0.5
-                        }]
+            new Chart(document.getElementById("chartjs-dashboard-bar"), {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Logs en cours",
+                        backgroundColor: window.theme.primary,
+                        borderColor: window.theme.primary,
+                        hoverBackgroundColor: window.theme.primary,
+                        hoverBorderColor: window.theme.primary,
+                        data: occ,
+                        barPercentage: 0.75,
+                        categoryPercentage: 0.5
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    legend: {
+                        display: false
                     },
-                    options: {
-                        maintainAspectRatio: false,
-                        legend: {
-                            display: false
-                        },
-                        scales: {
-                            yAxes: [{
-                                gridLines: {
-                                    display: false
-                                },
-                                stacked: false,
-                                ticks: {
-                                    stepSize: 5
-                                }
-                            }],
-                            xAxes: [{
-                                stacked: false,
-                                gridLines: {
-                                    color: "transparent"
-                                }
-                            }]
-                        }
+                    scales: {
+                        yAxes: [{
+                            gridLines: {
+                                display: false
+                            },
+                            stacked: false,
+                            ticks: {
+                                stepSize: 5
+                            }
+                        }],
+                        xAxes: [{
+                            stacked: false,
+                            gridLines: {
+                                color: "transparent"
+                            }
+                        }]
                     }
-                });
+                }
+            });
 
             function sortUrlData(urlLabels, urlOcc) {
                 const combined = urlLabels.map((label, index) => [label, urlOcc[index]]);
@@ -870,73 +856,254 @@
             });
         });
     </script>
+
+
+    <script src="js/app.js"></script>
+
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            var markers = [{
-                coords: [31.230391, 121.473701],
-                name: "Shanghai"
-            },
-            {
-                coords: [28.704060, 77.102493],
-                name: "Delhi"
-            },
-            {
-                coords: [6.524379, 3.379206],
-                name: "Lagos"
-            },
-            {
-                coords: [35.689487, 139.691711],
-                name: "Tokyo"
-            },
-            {
-                coords: [23.129110, 113.264381],
-                name: "Guangzhou"
-            },
-            {
-                coords: [40.7127837, -74.0059413],
-                name: "New York"
-            },
-            {
-                coords: [34.052235, -118.243683],
-                name: "Los Angeles"
-            },
-            {
-                coords: [41.878113, -87.629799],
-                name: "Chicago"
-            },
-            {
-                coords: [51.507351, -0.127758],
-                name: "London"
-            },
-            {
-                coords: [40.416775, -3.703790],
-                name: "Madrid "
+
+
+        function downloadPCAP() {
+            fetch("http://localhost:8101/fetch-logs")
+                .then(response => response.text())
+                .then(message => {
+                    alert(message); // te montre "Fichier téléchargé avec succès : ./src/Logs/logs"
+                })
+                .catch(error => alert("Erreur de téléchargement depuis l'API : " + error));
+        }
+
+        function uploadPCAP() {
+            const fileInput = document.getElementById("pcapFileInput");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Veuillez sélectionner un fichier PCAP.");
+                return;
             }
-            ];
-            var map = new jsVectorMap({
-                map: "world",
-                selector: "#world_map",
-                zoomButtons: true,
-                markers: markers,
-                markerStyle: {
-                    initial: {
-                        r: 9,
-                        strokeWidth: 7,
-                        stokeOpacity: .4,
-                        fill: window.theme.primary
-                    },
-                    hover: {
-                        fill: window.theme.primary,
-                        stroke: window.theme.primary
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            fetch("http://localhost:8101/upload", {
+                method: "POST",
+                body: formData
+            })
+                .then(response => {
+                    // On vérifie si le backend retourne bien du JSON
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        return response.json();
+                    } else {
+                        return response.text().then(text => { throw new Error(text); });
                     }
-                },
-                zoomOnScroll: false
+                })
+                .then(result => {
+                    // Si success = true dans le JSON
+                    if (result.success) {
+                        alert(result.message); // ex: Fichier PCAP importé sur le serveur : ./src/Logs/logs
+                    } else {
+                        alert("Erreur : " + result.message);
+                    }
+                })
+                .catch(error => {
+                    console.error("Erreur upload :", error);
+                    alert("Erreur inattendue lors de l'import : " + error.message);
+                });
+        }
+
+
+
+        function analyzePCAP() {
+            fetch("http://localhost:8101/analyze")
+                .then(response => {
+                    if (!response.ok) throw new Error("Erreur d'analyse");
+                    return response.json();
+                })
+                .then(data => {
+                    displayData(data);
+                })
+                .catch(error => alert("Erreur d'analyse : Failed to fetch"));
+        }
+
+
+
+        fetch('http://localhost:8101/dashboard')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                displayData(data);
+            })
+            .catch(error => {
+                console.error('Error fetching dashboard:', error);
             });
-            window.addEventListener("resize", () => {
-                map.updateSize();
-            });
-        });
     </script>
+
+    <script>
+
+        function uploadPCAP() {
+            const fileInput = document.getElementById("pcapFileInput");
+            const file = fileInput.files[0];
+
+            if (!file) {
+                alert("Veuillez sélectionner un fichier PCAP.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
+
+            fetch("http://localhost:8101/upload", {
+                method: "POST",
+                body: formData
+            })
+                .then(response => response.json())
+                .then(result => {
+                    alert(result.message);
+                    console.log(result);
+                })
+                .catch(error => {
+                    alert("Erreur JS : " + error.message);
+                    console.error(error);
+                });
+        }
+
+
+
+        function analyzePCAP() {
+            // 1. On décode les logs
+            fetch("http://localhost:8101/decode-logs")
+                .then(response => {
+                    if (!response.ok) throw new Error("Échec du décodage");
+                    return response.text();
+                })
+                .then(() => {
+                    // 2. Puis on recharge la page pour voir les nouvelles données
+                    window.location.reload();
+                })
+                .catch(error => alert("Erreur lors de l'analyse : " + error.message));
+        }
+    </script>
+
+
+    <style>
+        .dashboard-card {
+            min-height: 200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+
+        .dashboard-card .card-body {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+
+        .dashboard-card h5 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .dashboard-card h1 {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .dashboard-card input[type="file"] {
+            margin-bottom: 10px;
+            width: 90%;
+            text-align: center;
+        }
+    </style>
+
+
+
+</body>
+
+</html>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var markers = [{
+            coords: [31.230391, 121.473701],
+            name: "Shanghai"
+        },
+        {
+            coords: [28.704060, 77.102493],
+            name: "Delhi"
+        },
+        {
+            coords: [6.524379, 3.379206],
+            name: "Lagos"
+        },
+        {
+            coords: [35.689487, 139.691711],
+            name: "Tokyo"
+        },
+        {
+            coords: [23.129110, 113.264381],
+            name: "Guangzhou"
+        },
+        {
+            coords: [40.7127837, -74.0059413],
+            name: "New York"
+        },
+        {
+            coords: [34.052235, -118.243683],
+            name: "Los Angeles"
+        },
+        {
+            coords: [41.878113, -87.629799],
+            name: "Chicago"
+        },
+        {
+            coords: [51.507351, -0.127758],
+            name: "London"
+        },
+        {
+            coords: [40.416775, -3.703790],
+            name: "Madrid "
+        }
+        ];
+        var map = new jsVectorMap({
+            map: "world",
+            selector: "#world_map",
+            zoomButtons: true,
+            markers: markers,
+            markerStyle: {
+                initial: {
+                    r: 9,
+                    strokeWidth: 7,
+                    stokeOpacity: .4,
+                    fill: window.theme.primary
+                },
+                hover: {
+                    fill: window.theme.primary,
+                    stroke: window.theme.primary
+                }
+            },
+            zoomOnScroll: false
+        });
+        window.addEventListener("resize", () => {
+            map.updateSize();
+        });
+    });
+</script>
 </body>
 
 </html>

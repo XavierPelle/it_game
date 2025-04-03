@@ -9,16 +9,22 @@ class Router
     }
 
     public function handleRequest()
-    {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+{
+    $method = $_SERVER['REQUEST_METHOD'];
+    $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-        if (isset($this->routes[$method][$path])) {
-            call_user_func($this->routes[$method][$path]);
-        } else {
-            $this->notFound();
-        }
+    error_log("Méthode: $method, URI: $path"); // <-- déjà ajouté, très bien
+
+    if (isset($this->routes[$method][$path])) {
+        error_log("Route trouvée, exécution de : " . json_encode($this->routes[$method][$path]));
+        call_user_func($this->routes[$method][$path]);
+    } else {
+        error_log("Route non trouvée : $method $path");
+        $this->notFound();
     }
+}
+
+
 
     private function notFound()
     {
