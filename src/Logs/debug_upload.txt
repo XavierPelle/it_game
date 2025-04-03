@@ -1,0 +1,13 @@
+Array
+(
+    [file] => Array
+        (
+            [name] => ex4.pcap
+            [full_path] => ex4.pcap
+            [type] => application/octet-stream
+            [tmp_name] => /tmp/php1Jjbqq
+            [error] => 0
+            [size] => 2452574
+        )
+
+)
