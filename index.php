@@ -16,7 +16,8 @@ $router->addRoute('GET', '/analyzeIP', [$logsDecoderController, 'analyzeIp']);
 $router->addRoute('GET', '/analyzeURL', [$logsDecoderController, 'analyzeUrlWithVirusTotal']);
 $router->addRoute('GET', '/dashboard', [$logsDecoderController, 'showDashboard']);
 $router->addRoute('GET', '/test', [$logsDecoderController, 'test']);
-
+$router->addRoute('GET', '/flag', [$logsDecoderController, 'flag']);
+$router->addRoute('GET', '/a', [$logsDecoderController, 'scan']);
 
 $router->handleRequest();
 ?>

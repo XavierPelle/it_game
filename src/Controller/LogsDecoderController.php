@@ -1,4 +1,10 @@
 <?php
+ini_set('memory_limit', '512M');
+
+ini_set('display_errors', 0);  // Désactive l'affichage des erreurs
+ini_set('log_errors', 1);      // Active l'enregistrement des erreurs dans un fichier
+ini_set('error_log', '/chemin/vers/votre/fichier_de_log.log'); // Spécifie le chemin du fichier de log
+
 
 class LogsDecoderController
 {
@@ -87,8 +93,14 @@ class LogsDecoderController
 
         if (preg_match('/CNameString:\s*([^,]+)/', $line, $matches)) {
             $cname = trim($matches[1]);
-            $data['kerberos_services'][$cname] = ($data['kerberos_services'][$cname] ?? 0) + 1;
+
+            if (preg_match('/^[a-z]+\.[a-z]+$/', $cname)) {
+                $data['kerberos_services'][$cname] = ($data['kerberos_services'][$cname] ?? 0) + 1;
+            } else if (preg_match('/^[a-z]+$/', $cname)) {
+                $data['kerberos_services'][$cname] = ($data['kerberos_services'][$cname] ?? 0) + 1;
+            }
         }
+
         if (preg_match('/realm:\s*([^,]+)/', $line, $matches)) {
             $realm = trim($matches[1]);
             $data['kerberos_realms'][$realm] = ($data['kerberos_realms'][$realm] ?? 0) + 1;
@@ -122,63 +134,63 @@ class LogsDecoderController
     }
 
     public function analyzeIP()
-{
-    if (!isset($_GET['ip'])) {
-        echo "Aucune adresse IP fournie.";
-        return;
-    }
+    {
+        if (!isset($_GET['ip'])) {
+            echo "Aucune adresse IP fournie.";
+            return;
+        }
 
-    $ip = $_GET['ip'];
-    $vtApiKey = '168a3d3874c712ae9d6fc313ae20f0fbc44cbf6bc9f98a818302a05e5056163c';
-    $abuseApiKey = '16ac9dfa2f6bec5ee41423b2ab52797178d1e576d7ab91be587f47adf4f9a45fbe761d9e470ceced';
+        $ip = $_GET['ip'];
+        $vtApiKey = '168a3d3874c712ae9d6fc313ae20f0fbc44cbf6bc9f98a818302a05e5056163c';
+        $abuseApiKey = '16ac9dfa2f6bec5ee41423b2ab52797178d1e576d7ab91be587f47adf4f9a45fbe761d9e470ceced';
 
-    // ---- VIRUSTOTAL ----
-    $vtUrl = 'https://www.virustotal.com/api/v3/ip_addresses/' . urlencode($ip);
-    $ch = curl_init();
-    curl_setopt($ch, CURLOPT_URL, $vtUrl);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, ['x-apikey: ' . $vtApiKey]);
-    $vtResponse = curl_exec($ch);
-    curl_close($ch);
+        // ---- VIRUSTOTAL ----
+        $vtUrl = 'https://www.virustotal.com/api/v3/ip_addresses/' . urlencode($ip);
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $vtUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['x-apikey: ' . $vtApiKey]);
+        $vtResponse = curl_exec($ch);
+        curl_close($ch);
 
-    $vtData = json_decode($vtResponse, true);
-    $vtHtml = '';
-    if (isset($vtData['data'])) {
+        $vtData = json_decode($vtResponse, true);
+        $vtHtml = '';
+        if (isset($vtData['data'])) {
+            ob_start();
+            echo "<h2>🔬 VirusTotal Analysis</h2>";
+            echo "<table><tr><th>ID</th><td>{$vtData['data']['id']}</td></tr>";
+            echo "<tr><th>Type</th><td>{$vtData['data']['type']}</td></tr></table>";
+            echo "<h4>Tags</h4><ul>";
+            foreach ($vtData['data']['attributes']['tags'] ?? [] as $tag) {
+                echo "<li>{$tag}</li>";
+            }
+            echo "</ul>";
+            echo "<h4>Last Analysis Stats</h4><ul>";
+            foreach ($vtData['data']['attributes']['last_analysis_stats'] as $k => $v) {
+                echo "<li><strong>" . ucfirst($k) . ":</strong> $v</li>";
+            }
+            echo "</ul>";
+            $vtHtml = ob_get_clean();
+        } else {
+            $vtHtml = "<p>Aucune donnée VirusTotal disponible.</p>";
+        }
+
+        // ---- ABUSEIPDB ----
+        $abuseComments = $this->getAbuseIpComments($ip, $abuseApiKey);
         ob_start();
-        echo "<h2>🔬 VirusTotal Analysis</h2>";
-        echo "<table><tr><th>ID</th><td>{$vtData['data']['id']}</td></tr>";
-        echo "<tr><th>Type</th><td>{$vtData['data']['type']}</td></tr></table>";
-        echo "<h4>Tags</h4><ul>";
-        foreach ($vtData['data']['attributes']['tags'] ?? [] as $tag) {
-            echo "<li>{$tag}</li>";
+        echo "<h2>🛡️ AbuseIPDB Reports</h2>";
+        if (!empty($abuseComments)) {
+            echo "<table><tr><th>Date</th><th>Pays</th><th>Catégories</th><th>Commentaire</th></tr>";
+            foreach ($abuseComments as $entry) {
+                echo "<tr><td>{$entry['date']}</td><td>{$entry['reporterCountryCode']}</td><td>" . implode(', ', $entry['categories']) . "</td><td>" . htmlentities($entry['comment']) . "</td></tr>";
+            }
+            echo "</table>";
+        } else {
+            echo "<p>Aucun commentaire ou rapport trouvé sur AbuseIPDB.</p>";
         }
-        echo "</ul>";
-        echo "<h4>Last Analysis Stats</h4><ul>";
-        foreach ($vtData['data']['attributes']['last_analysis_stats'] as $k => $v) {
-            echo "<li><strong>" . ucfirst($k) . ":</strong> $v</li>";
-        }
-        echo "</ul>";
-        $vtHtml = ob_get_clean();
-    } else {
-        $vtHtml = "<p>Aucune donnée VirusTotal disponible.</p>";
-    }
+        $abuseHtml = ob_get_clean();
 
-    // ---- ABUSEIPDB ----
-    $abuseComments = $this->getAbuseIpComments($ip, $abuseApiKey);
-    ob_start();
-    echo "<h2>🛡️ AbuseIPDB Reports</h2>";
-    if (!empty($abuseComments)) {
-        echo "<table><tr><th>Date</th><th>Pays</th><th>Catégories</th><th>Commentaire</th></tr>";
-        foreach ($abuseComments as $entry) {
-            echo "<tr><td>{$entry['date']}</td><td>{$entry['reporterCountryCode']}</td><td>" . implode(', ', $entry['categories']) . "</td><td>" . htmlentities($entry['comment']) . "</td></tr>";
-        }
-        echo "</table>";
-    } else {
-        echo "<p>Aucun commentaire ou rapport trouvé sur AbuseIPDB.</p>";
-    }
-    $abuseHtml = ob_get_clean();
-
-    echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Analyse IP : $ip</title>
+        echo "<!DOCTYPE html><html lang='fr'><head><meta charset='UTF-8'><title>Analyse IP : $ip</title>
     <style>
         body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
         h2 { color: #2c3e50; margin-top: 30px; }
@@ -187,56 +199,57 @@ class LogsDecoderController
         th { background-color: #eee; }
         ul { list-style: disc; padding-left: 20px; }
     </style></head><body>";
-    
-    echo "<h1>Analyse complète pour l'IP : $ip</h1>";
-    echo $vtHtml;
-    echo $abuseHtml;
-    echo "</body></html>";
-}
 
-function getAbuseIpComments($ip, $apiKey) {
-    $url = "https://api.abuseipdb.com/api/v2/check?ipAddress=$ip&maxAgeInDays=90&verbose=true";
-
-    $curl = curl_init();
-    curl_setopt_array($curl, [
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTPHEADER => [
-            "Key: $apiKey",
-            "Accept: application/json"
-        ],
-    ]);
-
-    $response = curl_exec($curl);
-    curl_close($curl);
-
-    $data = json_decode($response, true);
-
-    // DEBUG POUR COMPRENDRE
-    if (!$data || !isset($data['data'])) {
-        echo "<p><strong>⚠️ Erreur : pas de champ 'data' dans la réponse AbuseIPDB.</strong></p>";
-        echo "<pre>" . htmlentities($response) . "</pre>";
-        return [];
+        echo "<h1>Analyse complète pour l'IP : $ip</h1>";
+        echo $vtHtml;
+        echo $abuseHtml;
+        echo "</body></html>";
     }
 
-    if (!isset($data['data']['reports']) || !is_array($data['data']['reports'])) {
-        echo "<p><strong> Aucun rapport trouvé (champ 'reports' absent ou vide).</strong></p>";
-        return [];
-    }
+    function getAbuseIpComments($ip, $apiKey)
+    {
+        $url = "https://api.abuseipdb.com/api/v2/check?ipAddress=$ip&maxAgeInDays=90&verbose=true";
 
-    $comments = [];
-    foreach ($data['data']['reports'] as $report) {
-        $comments[] = [
-            'date' => $report['reportedAt'] ?? 'Inconnu',
-            'comment' => $report['comment'] ?? '',
-            'categories' => $report['categories'] ?? [],
-            'reporterCountryCode' => $report['reporterCountryCode'] ?? '??'
-        ];
-    }
+        $curl = curl_init();
+        curl_setopt_array($curl, [
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTPHEADER => [
+                "Key: $apiKey",
+                "Accept: application/json"
+            ],
+        ]);
 
-    return $comments;
-}
+        $response = curl_exec($curl);
+        curl_close($curl);
+
+        $data = json_decode($response, true);
+
+        // DEBUG POUR COMPRENDRE
+        if (!$data || !isset($data['data'])) {
+            echo "<p><strong>⚠️ Erreur : pas de champ 'data' dans la réponse AbuseIPDB.</strong></p>";
+            echo "<pre>" . htmlentities($response) . "</pre>";
+            return [];
+        }
+
+        if (!isset($data['data']['reports']) || !is_array($data['data']['reports'])) {
+            echo "<p><strong> Aucun rapport trouvé (champ 'reports' absent ou vide).</strong></p>";
+            return [];
+        }
+
+        $comments = [];
+        foreach ($data['data']['reports'] as $report) {
+            $comments[] = [
+                'date' => $report['reportedAt'] ?? 'Inconnu',
+                'comment' => $report['comment'] ?? '',
+                'categories' => $report['categories'] ?? [],
+                'reporterCountryCode' => $report['reporterCountryCode'] ?? '??'
+            ];
+        }
+
+        return $comments;
+    }
 
     public function analyzeUrlWithVirusTotal()
     {
@@ -366,6 +379,14 @@ function getAbuseIpComments($ip, $apiKey) {
 
         fclose($file);
 
+        $mac = $this->test();
+        $scan = $this->scan();
+        $scanURI = $this->scanURI();
+        $scanHttp = $this->scanHttp();
+        $scanDl = $this->scanDl();
+        $scanDLURL = $this->scanDLURL();
+        $analyzeRdpTraffic = $this->analyzeRdpTraffic();
+
         $jsonData = json_encode([
             'ethernet_frames' => $data['ethernet_frames'],
             'ipv4_frames' => $data['ipv4_frames'],
@@ -385,43 +406,356 @@ function getAbuseIpComments($ip, $apiKey) {
             'url' => $data['url'],
             'logs_length' => $data['logs_length'],
             'dst_ports' => $data['dst_ports'],
+            'mac' => $mac,
+            'scan' => $scan,
+            'scanURI' => $scanURI,
+            'scanHttp' => $scanHttp,
+            'scanDl' => $scanDl,
+            'scanDLURL' => $scanDLURL,
+            'analyzeRdpTraffic' => $analyzeRdpTraffic,
         ]);
         echo $jsonData;
-    }
-
-    private function getIpCoordinates($ipAddresses)
-    {
-        $coordinates = [];
-        $apiUrl = 'http://ip-api.com/json/';
-
-        foreach ($ipAddresses as $ip) {
-            $response = file_get_contents($apiUrl . $ip);
-            $data = json_decode($response, true);
-
-            if ($data && $data['status'] === 'success') {
-                $coordinates[] = [
-                    'ip' => $ip,
-                    'latitude' => $data['lat'],
-                    'longitude' => $data['lon']
-                ];
-            } else {
-                $coordinates[] = [
-                    'ip' => $ip,
-                    'latitude' => null,
-                    'longitude' => null
-                ];
-            }
-        }
-        return $coordinates;
     }
 
     public function test()
     {
         $pcapFile = 'src/Logs/logs';
+        $output = shell_exec("tshark -r $pcapFile -T fields \
+        -e frame.time -e eth.src -e ip.src -e nbns.name \
+        -e ip.dst -e eth.dst -e http.host -e http.request.uri -e dns.qry.name");
 
-        $output = shell_exec("tshark -r $pcapFile -Y 'dns.qry.name' -T fields -e eth.src -e dns.qry.name -e kerberos.CNameString -e dhcp.option.hostname");
+        $lines = explode("\n", trim($output));
 
+        $tableData = [];
 
-        var_dump($output);
+        foreach ($lines as $line) {
+            $fields = explode("\t", $line);
+
+            $dnsQueryName = isset($fields[8]) ? $fields[8] : '';
+            $nbnsName = isset($fields[3]) ? $fields[3] : '';
+
+            if (empty($dnsQueryName) && empty($nbnsName)) {
+                continue;
+            }
+
+            if (count($fields) == 9) {
+                $tableData[] = [
+                    'time' => $fields[0],
+                    'src_mac' => $fields[1],
+                    'src_ip' => $fields[2],
+                    'nbns_name' => $fields[3],
+                    'dst_ip' => $fields[4],
+                    'dst_mac' => $fields[5],
+                    'dns_query_name' => $fields[8]
+                ];
+            }
+        }
+
+        return $tableData;
     }
+
+    public function filterMachineDnsQueries($data)
+    {
+        $regex = '/^[A-Z0-9]+-[A-Z0-9]+/';
+        $seen = [];
+        $result = [];
+
+        foreach ($data as $item) {
+            $dnsQueryNamePart = explode('.', $item['dns_query_name'])[0];
+
+            if (preg_match($regex, $dnsQueryNamePart)) {
+                $key = $dnsQueryNamePart . '-' . $item['dst_mac'] . '-' . $item['dst_ip'];
+
+                if (!in_array($key, $seen)) {
+                    $seen[] = $key;
+
+                    $result[] = [
+                        'lines' => [
+                            $item['dst_mac'],
+                            $item['dst_ip'],
+                            $dnsQueryNamePart
+                        ]
+                    ];
+                }
+            }
+        }
+
+        return $result;
+    }
+    public function flag()
+    {
+        $user_id = "Xavier Pelle";
+
+        $testData = $this->test();
+        $filteredData = $this->filterMachineDnsQueries($testData);
+        $karberos_names = $this->processKerberosCName();
+
+        $result = [];
+        foreach ($karberos_names as $kerberos_name) {
+            foreach ($filteredData as $item) {
+                $item['lines'][] = $kerberos_name;
+
+                $result[] = [
+                    'user_id' => $user_id,
+                    'lines' => $item['lines']
+                ];
+            }
+        }
+        $this->sendToApi($result);
+    }
+
+    private function sendToApi($result)
+    {
+        $url = 'http://93.127.203.48:5000/pcap/submit';
+        foreach ($result as $data) {
+            $jsonData = json_encode($data);
+
+            $ch = curl_init($url);
+
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $jsonData);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Content-Type: application/json',
+                'Content-Length: ' . strlen($jsonData)
+            ]);
+
+            $response = curl_exec($ch);
+
+            if (curl_errno($ch)) {
+                echo 'Error:' . curl_error($ch);
+            }
+
+            curl_close($ch);
+
+            $responseData = json_decode($response, true);
+
+            if (isset($responseData['flag'])) {
+                $result = json_encode([
+                    'flag' => $responseData['flag'],
+                    'data' => $jsonData,
+                ]);
+                echo $result;
+            }
+        }
+    }
+
+    function processKerberosCName()
+    {
+        $decodedFile = './src/Logs/decoded_logs.txt';
+
+        $data = [];
+        if ($file = fopen($decodedFile, 'r')) {
+            while (($line = fgets($file)) !== false) {
+                if (preg_match('/CNameString:\s*([^,]+)/', $line, $matches)) {
+                    $cname = trim($matches[1]);
+
+                    if (preg_match('/^[a-zA-Z0-9.-]+\.[a-zA-Z0-9.-]+$/', $cname)) {
+                        $data[] = $cname;
+                    } else if (preg_match('/^[a-zA-Z0-9.-]+$/', $cname)) {
+                        $data[] = $cname;
+                    }
+                }
+            }
+            fclose($file);
+        } else {
+            echo "Erreur lors de l'ouverture du fichier.";
+        }
+
+        $counts = array_count_values($data);
+
+        $filteredData = [];
+        foreach ($counts as $cname => $count) {
+            if ($count > 1) {
+                $filteredData[] = $cname;
+            }
+        }
+
+        return $filteredData;
+    }
+    public function scan()
+    {
+        $pcapFile = 'src/Logs/logs';
+        $output = shell_exec("tshark -r $pcapFile -Y 'tcp.flags.syn == 1 and tcp.flags.ack == 0' -T fields -e ip.src -e tcp.dstport | sort | uniq -c");
+
+        $data = [];
+
+        $lines = explode("\n", $output);
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+
+            $parts = preg_split('/\s+/', $line);
+
+            if (count($parts) >= 3) {
+                $count = $parts[0];
+                $ip = $parts[1];
+                $port = $parts[2];
+
+                $data[] = [
+                    'count' => $count,
+                    'ip' => $ip,
+                    'port' => $port,
+                ];
+            }
+        }
+        return $data;
+    }
+
+    public function scanURI() {
+        $pcapFile = 'src/Logs/logs';
+        $output = shell_exec("tshark -r $pcapFile -Y 'http.request' -T fields -e ip.src -e http.host -e http.request.uri");
+    
+        $data = [];
+    
+        $lines = explode("\n", $output);
+        
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+    
+            $parts = preg_split('/\s+/', $line);
+            
+            if (count($parts) >= 3) {
+                $ip = $parts[0];      
+                $host = $parts[1]; 
+                $uri = $parts[2];     
+    
+                $data[] = [
+                    'ip' => $ip,
+                    'host' => $host,
+                    'uri' => $uri,
+                ];
+            }
+        }
+
+    
+        return $data; 
+    }
+    public function scanHttp() {
+        $pcapFile = 'src/Logs/logs';  
+        $output = shell_exec("tshark -r $pcapFile -Y 'ftp' -T fields -e ip.src -e ftp.request.command -e ftp.request.arg");
+    
+        $data = [];
+    
+        $lines = explode("\n", $output);
+    
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+    
+            $parts = preg_split('/\s+/', $line);
+    
+            if (count($parts) >= 3) {
+                $ip = $parts[0];         
+                $command = $parts[1];    
+                $arg = isset($parts[2]) ? $parts[2] : '';
+    
+                $data[] = [
+                    'ip' => $ip,
+                    'command' => $command,
+                    'arg' => $arg,
+                ];
+            }
+        }
+    
+        return $data; 
+    }
+
+    public function scanDl() {
+        $pcapFile = 'src/Logs/logs';  
+        $output = shell_exec("tshark -r $pcapFile -Y 'http.response.code == 200' -T fields -e ip.src -e ip.dst -e http.response.code");
+    
+        $data = [];
+   
+        $lines = explode("\n", $output);
+    
+        foreach ($lines as $line) {
+        
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+    
+        
+            $parts = preg_split('/\s+/', $line);
+    
+            if (count($parts) >= 3) {
+
+                $srcIp = $parts[0];       
+                $dstIp = $parts[1];   
+                $httpCode = $parts[2];   
+
+                $data[] = [
+                    'src_ip' => $srcIp,
+                    'dst_ip' => $dstIp,
+                    'http_code' => $httpCode,
+                ];
+            }
+        }
+    
+        return $data;
+    }
+    public function scanDLURL() {
+        $pcapFile = 'src/Logs/logs';
+        $output = shell_exec("tshark -r $pcapFile -Y 'http.response.code == 200' -T fields -e ip.src -e http.host -e http.request.uri -e http.content_type -e http.content_length");
+    
+        $data = [];
+        $lines = explode("\n", $output);
+    
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+    
+            $parts = preg_split('/\s+/', $line);
+    
+            if (count($parts) >= 5) {
+                $data[] = [
+                    'ip' => $parts[0],
+                    'host' => $parts[1],
+                    'uri' => $parts[2],
+                    'content_type' => $parts[3],
+                    'content_length' => $parts[4],
+                ];
+            }
+        }
+    
+        return $data;
+    }
+    public function analyzeRdpTraffic() {
+        $pcapFile = 'src/Logs/logs';
+        $output = shell_exec("tshark -r $pcapFile -Y 'tcp.port == 3389' -T fields -e frame.time -e ip.src -e ip.dst");
+    
+        $data = [];
+        $lines = explode("\n", $output);
+    
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+    
+            $parts = preg_split('/\s+/', $line);
+    
+            if (count($parts) >= 3) {
+                $data[] = [
+                    'time' => $parts[0],
+                    'src_ip' => $parts[1],
+                    'dst_ip' => $parts[2],
+                ];
+            }
+        }
+    
+        return $data;
+    }
+    
 }

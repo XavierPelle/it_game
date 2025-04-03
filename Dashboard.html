@@ -12,6 +12,7 @@
 
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link rel="shortcut icon" href="img/icons/icon-48x48.png" />
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 
     <link rel="canonical" href="https://demo-basic.adminkit.io/" />
 
@@ -31,198 +32,36 @@
         overflow-y: auto;
         background-color: white;
     }
+
+    .table-containers {
+        max-height: 400px;
+        overflow-y: auto;
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .table th,
+    .table td {
+        vertical-align: middle;
+    }
 </style>
 
 <body>
     <div class="wrapper">
 
         <div class="main">
-            <nav class="navbar navbar-expand navbar-light navbar-bg">
-                <a class="sidebar-toggle js-sidebar-toggle">
-                    <i class="hamburger align-self-center"></i>
-                </a>
+            <div id="alerts-container"></div>
 
-                <div class="navbar-collapse collapse">
-                    <ul class="navbar-nav navbar-align">
-                        <li class="nav-item dropdown">
-                            <a class="nav-icon dropdown-toggle" href="#" id="alertsDropdown" data-bs-toggle="dropdown">
-                                <div class="position-relative">
-                                    <i class="align-middle" data-feather="bell"></i>
-                                    <span class="indicator">4</span>
-                                </div>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0"
-                                aria-labelledby="alertsDropdown">
-                                <div class="dropdown-menu-header">
-                                    4 New Notifications
-                                </div>
-                                <div class="list-group">
-                                    <a href="#" class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col-2">
-                                                <i class="text-danger" data-feather="alert-circle"></i>
-                                            </div>
-                                            <div class="col-10">
-                                                <div class="text-dark">Update completed</div>
-                                                <div class="text-muted small mt-1">Restart server 12 to complete the
-                                                    update.</div>
-                                                <div class="text-muted small mt-1">30m ago</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col-2">
-                                                <i class="text-warning" data-feather="bell"></i>
-                                            </div>
-                                            <div class="col-10">
-                                                <div class="text-dark">Lorem ipsum</div>
-                                                <div class="text-muted small mt-1">Aliquam ex eros, imperdiet vulputate
-                                                    hendrerit et.</div>
-                                                <div class="text-muted small mt-1">2h ago</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col-2">
-                                                <i class="text-primary" data-feather="home"></i>
-                                            </div>
-                                            <div class="col-10">
-                                                <div class="text-dark">Login from 192.186.1.8</div>
-                                                <div class="text-muted small mt-1">5h ago</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col-2">
-                                                <i class="text-success" data-feather="user-plus"></i>
-                                            </div>
-                                            <div class="col-10">
-                                                <div class="text-dark">New connection</div>
-                                                <div class="text-muted small mt-1">Christina accepted your request.
-                                                </div>
-                                                <div class="text-muted small mt-1">14h ago</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="dropdown-menu-footer">
-                                    <a href="#" class="text-muted">Show all notifications</a>
-                                </div>
-                            </div>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-icon dropdown-toggle" href="#" id="messagesDropdown"
-                                data-bs-toggle="dropdown">
-                                <div class="position-relative">
-                                    <i class="align-middle" data-feather="message-square"></i>
-                                </div>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0"
-                                aria-labelledby="messagesDropdown">
-                                <div class="dropdown-menu-header">
-                                    <div class="position-relative">
-                                        4 New Messages
-                                    </div>
-                                </div>
-                                <div class="list-group">
-                                    <a href="#" class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col-2">
-                                                <img src="img/avatars/avatar-5.jpg"
-                                                    class="avatar img-fluid rounded-circle" alt="Vanessa Tucker">
-                                            </div>
-                                            <div class="col-10 ps-2">
-                                                <div class="text-dark">Vanessa Tucker</div>
-                                                <div class="text-muted small mt-1">Nam pretium turpis et arcu. Duis arcu
-                                                    tortor.</div>
-                                                <div class="text-muted small mt-1">15m ago</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col-2">
-                                                <img src="img/avatars/avatar-2.jpg"
-                                                    class="avatar img-fluid rounded-circle" alt="William Harris">
-                                            </div>
-                                            <div class="col-10 ps-2">
-                                                <div class="text-dark">William Harris</div>
-                                                <div class="text-muted small mt-1">Curabitur ligula sapien euismod
-                                                    vitae.</div>
-                                                <div class="text-muted small mt-1">2h ago</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col-2">
-                                                <img src="img/avatars/avatar-4.jpg"
-                                                    class="avatar img-fluid rounded-circle" alt="Christina Mason">
-                                            </div>
-                                            <div class="col-10 ps-2">
-                                                <div class="text-dark">Christina Mason</div>
-                                                <div class="text-muted small mt-1">Pellentesque auctor neque nec urna.
-                                                </div>
-                                                <div class="text-muted small mt-1">4h ago</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <a href="#" class="list-group-item">
-                                        <div class="row g-0 align-items-center">
-                                            <div class="col-2">
-                                                <img src="img/avatars/avatar-3.jpg"
-                                                    class="avatar img-fluid rounded-circle" alt="Sharon Lessman">
-                                            </div>
-                                            <div class="col-10 ps-2">
-                                                <div class="text-dark">Sharon Lessman</div>
-                                                <div class="text-muted small mt-1">Aenean tellus metus, bibendum sed,
-                                                    posuere ac, mattis non.</div>
-                                                <div class="text-muted small mt-1">5h ago</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="dropdown-menu-footer">
-                                    <a href="#" class="text-muted">Show all messages</a>
-                                </div>
-                            </div>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-icon dropdown-toggle d-inline-block d-sm-none" href="#"
-                                data-bs-toggle="dropdown">
-                                <i class="align-middle" data-feather="settings"></i>
-                            </a>
-
-                            <a class="nav-link dropdown-toggle d-none d-sm-inline-block" href="#"
-                                data-bs-toggle="dropdown">
-                                <img src="img/avatars/avatar.jpg" class="avatar img-fluid rounded me-1"
-                                    alt="Charles Hall" /> <span class="text-dark">Charles Hall</span>
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end">
-                                <a class="dropdown-item" href="pages-profile.html"><i class="align-middle me-1"
-                                        data-feather="user"></i> Profile</a>
-                                <a class="dropdown-item" href="#"><i class="align-middle me-1"
-                                        data-feather="pie-chart"></i> Analytics</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="index.html"><i class="align-middle me-1"
-                                        data-feather="settings"></i> Settings & Privacy</a>
-                                <a class="dropdown-item" href="#"><i class="align-middle me-1"
-                                        data-feather="help-circle"></i> Help Center</a>
-                                <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="#">Log out</a>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
 
             <main class="content">
                 <div class="container-fluid p-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h1 class="h3 mb-3"><strong>Analytics</strong> Dashboard</h1>
+                        <button id="submitButton" class="btn btn-primary btn-lg mb-2">Envoyer la requête</button>
+                    </div>
 
-                    <h1 class="h3 mb-3"><strong>Analytics</strong> Dashboard</h1>
 
                     <div class="row">
                         <div class="col-xl-6 col-xxl-5 d-flex">
@@ -323,7 +162,7 @@
                         <div class="col-xl-6 col-xxl-7 scrolls">
                             <div class="card flex-fill w-100">
                                 <div class="card-header">
-                                    <h5 class="card-title mb-0">Recent Movement</h5>
+                                    <h5 class="card-title mb-0">URL</h5>
                                 </div>
                                 <div class="card-body-url  py-3">
                                     <table class="table table-bordered table-striped">
@@ -334,7 +173,6 @@
                                             </tr>
                                         </thead>
                                         <tbody id="movementTableBody">
-                                            <!-- Les lignes seront insérées ici -->
                                         </tbody>
                                     </table>
                                 </div>
@@ -395,40 +233,25 @@
 
                     <div class="row">
                         <div class="col-12 col-lg-8 col-xxl-9 d-flex card-body-ip">
-                            <div class="card flex-fill">
+                            <div class=" flex-fill">
                                 <div class="card-header">
-                                    <h5 class="card-title mb-0">Adresse IP</h5>
+                                    <h5 class="card-title mb-0">Liste des adresses IP, MAC et DNS</h5>
                                 </div>
                                 <div class="row">
-                                    <div class="col-12 col-md-6">
-                                        <table id="srcTable" class="table table-hover my-0">
+                                    <div class="col-12">
+                                        <table id="ipMacDnsTable" class="table table-hover my-0">
                                             <thead>
                                                 <tr>
-                                                    <th>Adresses source</th>
-                                                    <th class="d-none d-xl-table-cell">Occurences</th>
+                                                    <th>Date</th>
+                                                    <th>MAC source</th>
+                                                    <th>IP source</th>
+                                                    <th>Nom NetBios</th>
+                                                    <th>MAC Destination</th>
+                                                    <th>IP Destination</th>
+                                                    <th>Nom DNS</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                <tr>
-                                                    <td>Adresses destination</td>
-                                                    <td class="d-none d-xl-table-cell">Occurences</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div class="col-12 col-md-6">
-                                        <table id="dstTable" class="table table-hover my-0">
-                                            <thead>
-                                                <tr>
-                                                    <th>Adresses destination</th>
-                                                    <th class="d-none d-xl-table-cell">Occurences</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>Adresses destination</td>
-                                                    <td class="d-none d-xl-table-cell">Occurences</td>
-                                                </tr>
                                             </tbody>
                                         </table>
                                     </div>
@@ -439,8 +262,7 @@
                         <div class="col-12 col-lg-4 col-xxl-3 d-flex">
                             <div class="card flex-fill w-100">
                                 <div class="card-header">
-
-                                    <h5 class="card-title mb-0">Kerberos services</h5>
+                                    <h5 class="card-title mb-0">Authentification Windows</h5>
                                 </div>
                                 <div class="card-body d-flex w-100">
                                     <div class="align-self-center chart chart-lg">
@@ -450,8 +272,9 @@
                             </div>
                         </div>
                     </div>
+
                 </div>
-                <div class="">
+                <div class="mt-3">
                     <div class="d-flex">
                         <div class="card flex-fill">
                             <div class="card-header">
@@ -470,59 +293,365 @@
                         </div>
                     </div>
                 </div>
-            </main>
-        </div>
-    </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Tentatives scans réseaux</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-containers">
+                                    <table id="tableScan" class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Tentatives</th>
+                                                <th>IP source</th>
+                                                <th>Port</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">HTTP suspects</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-containers">
+                                    <table id="tableScanURI" class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>IP source</th>
+                                                <th>Destination</th>
+                                                <th>URI</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Scan HTTP</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-containers">
+                                    <table id="tableScanHttp" class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>IP sourcese</th>
+                                                <th>Commande </th>
+                                                <th>Argument</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Téléchargement Web</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-containers">
+                                    <table id="tableScanDl" class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>IP source</th>
+                                                <th>IP destination</th>
+                                                <th>Code HTTP</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Téléchargement via url</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-containers">
+                                    <table id="tableScanDLURL" class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>IP source</th>
+                                                <th>Destination web</th>
+                                                <th>URI</th>
+                                                <th>Type</th>
+                                                <th>Taille</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">Analyse RDP Traffic</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-containers">
+                                    <table id="tableRdpTraffic" class="table table-striped">
+                                        <thead>
+                                            <tr>
+                                                <th>Date</th>
+                                                <th>IP source</th>
+                                                <th>IP destination</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+
+        </main>
+    </div>
     <script src="js/app.js"></script>
 
 
     <script>
-        let displayData = (data) => {
-            console.log(data);
-            console.log(data.src_addresses);
 
-            function sortData(data) {
-                return Object.entries(data)
-                    .sort((a, b) => b[1] - a[1])
-                    .reduce((sortedObj, [key, value]) => {
-                        sortedObj[key] = value;
-                        return sortedObj;
-                    }, {});
+
+
+
+        let displayData = (data) => {
+            console.log(data)
+            function fillTable(tableId, data) {
+                const tableBody = document.querySelector(`#${tableId} tbody`);
+                const tableContainer = document.querySelector(`#${tableId}`).closest('.card');
+                tableBody.innerHTML = '';
+
+                if (data.length === 0) {
+                    tableContainer.style.display = 'none';
+                } else {
+                    data.forEach(item => {
+                        const row = document.createElement('tr');
+                        Object.values(item).forEach(value => {
+                            const td = document.createElement('td');
+                            td.textContent = value;
+                            row.appendChild(td);
+                        });
+                        tableBody.appendChild(row);
+                    });
+
+                    tableContainer.style.display = 'block';
+                }
             }
 
+            fillTable('tableScan', data.scan);
+            fillTable('tableScanURI', data.scanURI);
+            fillTable('tableScanHttp', data.scanHttp);
+            fillTable('tableScanDl', data.scanDl);
+            fillTable('tableScanDLURL', data.scanDLURL);
+            fillTable('tableRdpTraffic', data.analyzeRdpTraffic);
+
+
+            function submitResultsToApi() {
+                fetch('http://localhost:8101/flag', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.flag) {
+                            console.log("Flag reçu:", data.flag);
+                            console.log("Data:", data.data);
+
+                            showAlert(data.flag, data.data);
+                        } else if (data.error) {
+                            console.log("Erreur:", data.error);
+                            showErrorAlert(data.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erreur lors de l\'envoi:', error);
+                    });
+            }
+
+            function showAlert(flag, data) {
+                const alertDiv = document.createElement('div');
+                alertDiv.classList.add('alert', 'alert-success', 'alert-dismissible', 'fade', 'show');
+                alertDiv.setAttribute('role', 'alert');
+
+                alertDiv.innerHTML = `
+        <strong>Flag reçu:</strong> ${flag} <br>
+        <strong>Data:</strong> ${JSON.stringify(data, null, 2)} 
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    `;
+
+                const alertsContainer = document.getElementById('alerts-container');
+                alertsContainer.innerHTML = '';
+                alertsContainer.appendChild(alertDiv);
+
+                setTimeout(() => {
+                    alertDiv.classList.remove('show');
+                    alertDiv.classList.add('fade');
+                }, 5000);
+            }
+
+            function showErrorAlert(error) {
+                const alertDiv = document.createElement('div');
+                alertDiv.classList.add('alert', 'alert-danger', 'alert-dismissible', 'fade', 'show');
+                alertDiv.setAttribute('role', 'alert');
+
+                alertDiv.innerHTML = `
+        <strong>Erreur:</strong> ${error} 
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    `;
+
+                const alertsContainer = document.getElementById('alerts-container');
+                alertsContainer.innerHTML = '';
+                alertsContainer.appendChild(alertDiv);
+
+                setTimeout(() => {
+                    alertDiv.classList.remove('show');
+                    alertDiv.classList.add('fade');
+                }, 5000);
+            }
+
+            document.getElementById('submitButton').addEventListener('click', function () {
+                console.log("Envoi de la requête GET à /flag");
+                submitResultsToApi();
+            });
+
+
+
+
+
             function populateTable(tableId, data) {
+                const safeDomains = [
+                    'microsoft.com', 'google.com', 'facebook.com', 'twitter.com', 'apple.com', 'th.bing.com', 'windows.com',
+                    'windowsupdate.com', 'windows.msn.com', 'www.msn.com', 'api.msn.com', 'amazon.com', 'youtube.com',
+                    'linkedin.com', 'instagram.com', 'yahoo.com', 'www.bing.com', 'dropbox.com', 'github.com', 'slack.com',
+                    'zoom.us', 'icloud.com', 'paypal.com', 'paypalobjects.com', 'square.com', 'adobe.com', 'shopify.com',
+                    'bankofamerica.com', 'chase.com', 'wellsfargo.com', 'capitalone.com', 'vimeo.com', 'pinterest.com',
+                    'reddit.com', 'twitch.tv', 'spotify.com', 'netflix.com', 'hulu.com', 'ebay.com', 'craigslist.org',
+                    'etsy.com', 'walmart.com', 'target.com', 'costco.com', 'bestbuy.com', 'fiverr.com', 'airbnb.com',
+                    'expedia.com', 'booking.com', 'skyscanner.com', 'travelocity.com', 'priceline.com', 'tripadvisor.com',
+                    'yelp.com', 'tumblr.com', 'medium.com', 'theguardian.com', 'bbc.com', 'cnn.com', 'nytimes.com',
+                    'wsj.com', 'forbes.com', 'reuters.com', 'bloomberg.com', 'bbc.co.uk', 'ft.com', 'theverge.com',
+                    'wired.com', 'techcrunch.com', 'venturebeat.com', 'gizmodo.com', 'engadget.com', 'androidcentral.com',
+                    'thebrowsercompany.com', 'mozilla.org', 'ubuntu.com', 'debian.org', 'redhat.com', 'archlinux.org',
+                    'gentoo.org', 'kde.org', 'gnome.org', 'docker.com', 'kubectl.com', 'hashicorp.com', 'terraform.io',
+                    'jenkins.io', 'nginx.org', 'nodejs.org', 'expressjs.com', 'reactjs.org', 'vuejs.org', 'angular.io',
+                    'webpack.js.org', 'vuejs.org', 'npmjs.com', 'rubyonrails.org', 'python.org', 'java.com', 'go.dev',
+                    'jetbrains.com', 'intellij.com', 'maven.apache.org', 'gradle.org', 'yarnpkg.com', 'githubusercontent.com',
+                    'stackoverflow.com', 'oracle.com', 'salesforce.com', 'sap.com', 'servicenow.com', 'intuit.com',
+                    'zoom.com', 'zoom.us', 't.co', 'pipedrive.com', 'twilio.com', 'stripe.com', 'sendgrid.com',
+                    'twilio.com', 'mailchimp.com', 'sendinblue.com', 'freshdesk.com', 'zendesk.com', 'atlassian.com',
+                    'jira.com', 'confluence.com', 'bitbucket.org', 'heroku.com', 'digitalocean.com', 'aws.amazon.com',
+                    'azure.microsoft.com', 'googlecloud.com', 'ibm.com', 'oraclecloud.com', 'alibaba.com', 'salesforce.com',
+                    'kaltura.com', 'brightcove.com', 'videolan.org', 'cloudflare.com', 'akamai.com', 'fastly.com',
+                    'rackspace.com', 'wpengine.com', 'siteground.com', 'bluehost.com', 'godaddy.com', 'hostgator.com', 'DESKTOP*', 'login.microsoftonline.com', 'login.live.com', 'assets.msn.com'
+                ];
+
+                const unsafeDomains = [
+                    '*.xyz', '*.tk', '*.club', '*.top', '*.pw', '*.cf', '*.ga', '*.gq', '*.ml', '*.xyz', '*.work',
+                    '*.online', '*.click', '*.win', '*.party', '*.pw', '*.info', '*.ru', '*.io', '*.fun', '*.ga',
+                    'bit.ly', 't.co', '*.top', '*.work', '*.download', '*.zip', '*.exe', '*.apk',
+                ];
+
                 const tableBody = document.querySelector(`#${tableId} tbody`);
                 tableBody.innerHTML = '';
 
-                Object.entries(data).forEach(([address, occurrences]) => {
-                    const row = document.createElement('tr');
+                const rows = data.map(({ time, src_mac, src_ip, nbns_name, dst_mac, dst_ip, dns_query_name }) => {
+                    const formattedTime = formatDate(time);
+                    const srcIpLink = createIpLink(src_ip);
+                    const dstIpLink = createIpLink(dst_ip);
+                    const backgroundColor = getBackgroundColor(dns_query_name, safeDomains, unsafeDomains);
 
-                    const addressCell = document.createElement('td');
+                    return `
+            <tr style="background-color: ${backgroundColor}">
+                <td style="white-space: nowrap">${formattedTime}</td>
+                <td>${src_mac}</td>
+                <td>${srcIpLink}</td>
+                <td>${nbns_name}</td>
+                <td>${dst_mac}</td>
+                <td>${dstIpLink}</td>
+                <td>${dns_query_name}</td>
+            </tr>
+        `;
+                }).join('');
 
-                    const link = document.createElement('a');
-                    link.href = `http://localhost:8101/analyzeIP?ip=${address}`;
-                    link.textContent = address;
-                    link.target = "_blank";
-
-                    addressCell.appendChild(link);
-                    row.appendChild(addressCell);
-
-                    const occurrencesCell = document.createElement('td');
-                    occurrencesCell.classList.add('d-none', 'd-xl-table-cell');
-                    occurrencesCell.textContent = occurrences;
-                    row.appendChild(occurrencesCell);
-
-                    tableBody.appendChild(row);
-                });
+                tableBody.innerHTML = rows;
             }
 
+            function createIpLink(ip) {
+                return `<a href="http://localhost:8101/analyzeIP?ip=${ip}" target="_blank">${ip}</a>`;
+            }
 
-            const sortedSrcAddresses = sortData(data.src_addresses);
-            const sortedDstAddresses = sortData(data.dst_addresses);
+            function getBackgroundColor(dnsQueryName, safeDomains, unsafeDomains) {
+                const isSafeDomain = safeDomains.some(pattern => {
+                    const regex = new RegExp(pattern.replace('*', '.*'));
+                    return regex.test(dnsQueryName);
+                });
 
-            populateTable('srcTable', sortedSrcAddresses);
-            populateTable('dstTable', sortedDstAddresses);
+                const isUnsafeDomain = unsafeDomains.some(pattern => {
+                    const regex = new RegExp(pattern.replace('*', '.*'));
+                    return regex.test(dnsQueryName);
+                });
+
+                if (isSafeDomain) {
+                    return '#b3e6b3';
+                }
+                if (isUnsafeDomain) {
+                    return '#ffb3b3';
+                }
+                return '#ffcc99';
+            }
+
+            function formatDate(dateString) {
+                const date = new Date(dateString);
+                const options = {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false
+                };
+                return date.toLocaleString('en-US', options);
+            }
+
+            populateTable('ipMacDnsTable', data.mac);
+
+
 
 
             const logsLength = document.querySelector("#logs_length");
@@ -578,83 +707,48 @@
         </tr>
     `;
 
-            const labels = Object.keys(data.kerberos_services);
-            const occ = Object.values(data.kerberos_services);
+    const labels = Object.keys(data.kerberos_services);
+                const occ = Object.values(data.kerberos_services);
 
-            new Chart(document.getElementById("chartjs-dashboard-bar"), {
-                type: "bar",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Logs en cours",
-                        backgroundColor: window.theme.primary,
-                        borderColor: window.theme.primary,
-                        hoverBackgroundColor: window.theme.primary,
-                        hoverBorderColor: window.theme.primary,
-                        data: occ,
-                        barPercentage: 0.75,
-                        categoryPercentage: 0.5
-                    }]
-                },
-                options: {
-                    maintainAspectRatio: false,
-                    legend: {
-                        display: false
-                    },
-                    scales: {
-                        yAxes: [{
-                            gridLines: {
-                                display: false
-                            },
-                            stacked: false,
-                            ticks: {
-                                stepSize: 5
-                            }
-                        }],
-                        xAxes: [{
-                            stacked: false,
-                            gridLines: {
-                                color: "transparent"
-                            }
+                new Chart(document.getElementById("chartjs-dashboard-bar"), {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: "Logs en cours",
+                            backgroundColor: window.theme.primary,
+                            borderColor: window.theme.primary,
+                            hoverBackgroundColor: window.theme.primary,
+                            hoverBorderColor: window.theme.primary,
+                            data: occ,
+                            barPercentage: 0.75,
+                            categoryPercentage: 0.5
                         }]
-                    }
-                }
-            });
-
-            const ipCoordinates = data.ip_coordinates || [];
-            console.log(ipCoordinates);
-
-            const markers = ipCoordinates.filter(coord => coord.latitude !== null && coord.longitude !== null)
-                .map(coord => ({
-                    coords: [coord.latitude, coord.longitude],
-                    name: coord.ip
-                }));
-
-            var map = new jsVectorMap({
-                map: "world",
-                selector: "#world_map",
-                zoomButtons: true,
-                markers: markers,
-                markerStyle: {
-                    initial: {
-                        r: 9,
-                        strokeWidth: 7,
-                        stokeOpacity: .4,
-                        fill: window.theme.primary
                     },
-                    hover: {
-                        fill: window.theme.primary,
-                        stroke: window.theme.primary
+                    options: {
+                        maintainAspectRatio: false,
+                        legend: {
+                            display: false
+                        },
+                        scales: {
+                            yAxes: [{
+                                gridLines: {
+                                    display: false
+                                },
+                                stacked: false,
+                                ticks: {
+                                    stepSize: 5
+                                }
+                            }],
+                            xAxes: [{
+                                stacked: false,
+                                gridLines: {
+                                    color: "transparent"
+                                }
+                            }]
+                        }
                     }
-                },
-                zoomOnScroll: false
-            });
-
-            window.addEventListener("resize", () => {
-                map.updateSize();
-            });
-
-
+                });
 
             function sortUrlData(urlLabels, urlOcc) {
                 const combined = urlLabels.map((label, index) => [label, urlOcc[index]]);
@@ -776,7 +870,73 @@
             });
         });
     </script>
-
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var markers = [{
+                coords: [31.230391, 121.473701],
+                name: "Shanghai"
+            },
+            {
+                coords: [28.704060, 77.102493],
+                name: "Delhi"
+            },
+            {
+                coords: [6.524379, 3.379206],
+                name: "Lagos"
+            },
+            {
+                coords: [35.689487, 139.691711],
+                name: "Tokyo"
+            },
+            {
+                coords: [23.129110, 113.264381],
+                name: "Guangzhou"
+            },
+            {
+                coords: [40.7127837, -74.0059413],
+                name: "New York"
+            },
+            {
+                coords: [34.052235, -118.243683],
+                name: "Los Angeles"
+            },
+            {
+                coords: [41.878113, -87.629799],
+                name: "Chicago"
+            },
+            {
+                coords: [51.507351, -0.127758],
+                name: "London"
+            },
+            {
+                coords: [40.416775, -3.703790],
+                name: "Madrid "
+            }
+            ];
+            var map = new jsVectorMap({
+                map: "world",
+                selector: "#world_map",
+                zoomButtons: true,
+                markers: markers,
+                markerStyle: {
+                    initial: {
+                        r: 9,
+                        strokeWidth: 7,
+                        stokeOpacity: .4,
+                        fill: window.theme.primary
+                    },
+                    hover: {
+                        fill: window.theme.primary,
+                        stroke: window.theme.primary
+                    }
+                },
+                zoomOnScroll: false
+            });
+            window.addEventListener("resize", () => {
+                map.updateSize();
+            });
+        });
+    </script>
 </body>
 
 </html>
