@@ -16,14 +16,14 @@
 
     <link rel="canonical" href="https://demo-basic.adminkit.io/" />
 
-    <title>AdminKit Demo - Bootstrap 5 Admin Template</title>
+    <title>Analyse Desk</title>
 
     <link href="css/app.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
 <style>
     .card-body-url {
-        max-height: 280px;
+        max-height: 40vh;
         overflow-y: auto;
     }
 
@@ -463,7 +463,7 @@
 
 
             function submitResultsToApi() {
-                fetch('http://localhost:8101/flag', {
+                fetch('http://78.199.142.161/flag', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
@@ -599,7 +599,7 @@
             }
 
             function createIpLink(ip) {
-                return `<a href="http://localhost:8101/analyzeIP?ip=${ip}" target="_blank">${ip}</a>`;
+                return `<a href="http://78.199.142.161/analyzeIP?ip=${ip}" target="_blank">${ip}</a>`;
             }
 
             function getBackgroundColor(dnsQueryName, safeDomains, unsafeDomains) {
@@ -828,7 +828,7 @@
 
         }
 
-        fetch('http://localhost:8101/dashboard')
+        fetch('http://78.199.142.161/dashboard')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -864,7 +864,7 @@
 
 
         function downloadPCAP() {
-            fetch("http://localhost:8101/fetch-logs")
+            fetch("http://78.199.142.161/fetch-logs")
                 .then(response => response.text())
                 .then(message => {
                     alert(message); // te montre "Fichier téléchargé avec succès : ./src/Logs/logs"
@@ -884,7 +884,7 @@
             const formData = new FormData();
             formData.append("file", file);
 
-            fetch("http://localhost:8101/upload", {
+            fetch("http://78.199.142.161/upload", {
                 method: "POST",
                 body: formData
             })
@@ -914,7 +914,7 @@
 
 
         function analyzePCAP() {
-            fetch("http://localhost:8101/analyze")
+            fetch("http://78.199.142.161/analyze")
                 .then(response => {
                     if (!response.ok) throw new Error("Erreur d'analyse");
                     return response.json();
@@ -927,7 +927,7 @@
 
 
 
-        fetch('http://localhost:8101/dashboard')
+        fetch('http://78.199.142.161/dashboard')
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -956,7 +956,7 @@
             const formData = new FormData();
             formData.append("file", file);
 
-            fetch("http://localhost:8101/upload", {
+            fetch("http://78.199.142.161/upload", {
                 method: "POST",
                 body: formData
             })
@@ -975,7 +975,7 @@
 
         function analyzePCAP() {
             // 1. On décode les logs
-            fetch("http://localhost:8101/decode-logs")
+            fetch("http://78.199.142.161/decode-logs")
                 .then(response => {
                     if (!response.ok) throw new Error("Échec du décodage");
                     return response.text();
